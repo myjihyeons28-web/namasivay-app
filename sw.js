@@ -1,10 +1,11 @@
 // 나마 시바이 — 서비스 워커 (오프라인 사용)
 
-const CACHE_NAME = 'namasivaya-v6';
+const CACHE_NAME = 'namasivaya-v7';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
+  './styles.css?v=7',
   './app.js',
   './sutras-data.js',
   './manifest.json',

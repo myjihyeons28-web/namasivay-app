@@ -580,7 +580,7 @@ body {
 /* ── 진행 막대 — 헤더 아래에 가는 은빛 ── */
 .reading-progress {
   height: 2px;
-  background: rgba(180, 180, 180, 0.18);
+  background: rgba(200, 200, 200, 0.2);
   width: 100%;
   flex-shrink: 0;
   position: relative;
@@ -590,10 +590,10 @@ body {
 
 .reading-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #b0b0b0 0%, #e8e8e8 50%, #b0b0b0 100%);
+  background: linear-gradient(90deg, #c8c8c8 0%, #f5f5f5 50%, #c8c8c8 100%);
   width: 0%;
   transition: width 0.15s ease-out;
-  box-shadow: 0 0 6px rgba(232, 232, 232, 0.6);
+  box-shadow: 0 0 8px rgba(245, 245, 245, 0.7);
 }
 
 /* ── 읽기 본문 ── */
