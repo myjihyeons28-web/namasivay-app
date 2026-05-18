@@ -10,15 +10,16 @@
   <title>나마 시바이</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="preload" href="fonts/gyeonggi-regular.woff" as="font" type="font/woff" crossorigin>
+  <link rel="preload" href="fonts/gyeonggi-bold.woff" as="font" type="font/woff" crossorigin>
   <link rel="stylesheet" href="styles.css">
-  <!-- Fallback 폰트 (오프라인 때는 경기천년바탕만 사용됨) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <!-- 표지 화면 -->
+  <!-- 표지 -->
   <section id="screen-cover" class="screen screen-cover active">
     <div class="cover-inner">
       <div class="cover-ornament-top">❖ &nbsp; ❖ &nbsp; ❖</div>
@@ -30,7 +31,7 @@
     </div>
   </section>
 
-  <!-- 경전 목록 화면 -->
+  <!-- 경전 목록 -->
   <section id="screen-list" class="screen screen-list">
     <header class="list-header">
       <button id="btn-back-to-cover" class="btn-icon" aria-label="표지로">
@@ -44,7 +45,7 @@
     <div class="list-content" id="list-content"></div>
   </section>
 
-  <!-- 경전 읽기 화면 -->
+  <!-- 경전 읽기 -->
   <section id="screen-reader" class="screen screen-reader">
     <header class="reader-header">
       <button id="btn-back-to-list" class="btn-icon" aria-label="목록으로">
@@ -54,7 +55,7 @@
       <button id="btn-toggle-bookmark" class="btn-icon" aria-label="책갈피 추가/제거">
         <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
       </button>
-      <button id="btn-font-size" class="btn-icon" aria-label="글씨 크기">
+      <button id="btn-reader-settings" class="btn-icon" aria-label="읽기 설정">
         <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M9 4v3h5v12h3V7h5V4H9zm-6 8h3v7h3v-7h3V9H3v3z"/></svg>
       </button>
     </header>
@@ -64,22 +65,47 @@
     </button>
   </section>
 
-  <!-- 글씨 크기 모달 -->
-  <div id="font-menu" class="modal-overlay">
+  <!-- 읽기 설정 모달 (글꼴 / 크기 / 배경색) -->
+  <div id="settings-menu" class="modal-overlay">
     <div class="modal-inner">
-      <div class="modal-title">글씨 크기</div>
+      <div class="modal-title">읽기 설정</div>
       <div class="modal-body">
-        <div class="font-menu-buttons">
-          <button data-size="small">작게</button>
-          <button data-size="medium" class="active">보통</button>
-          <button data-size="large">크게</button>
-          <button data-size="xlarge">아주 크게</button>
+
+        <!-- 글꼴 -->
+        <div class="setting-group">
+          <div class="setting-label">글  꼴</div>
+          <div class="setting-buttons cols-2">
+            <button data-setting="font" data-value="gyeonggi">경기천년바탕</button>
+            <button data-setting="font" data-value="nanum">나눔 명조</button>
+          </div>
         </div>
+
+        <!-- 글자 크기 -->
+        <div class="setting-group">
+          <div class="setting-label">글자 크기</div>
+          <div class="setting-buttons cols-4">
+            <button data-setting="size" data-value="small">작게</button>
+            <button data-setting="size" data-value="medium">보통</button>
+            <button data-setting="size" data-value="large">크게</button>
+            <button data-setting="size" data-value="xlarge">크게+</button>
+          </div>
+        </div>
+
+        <!-- 배경색 -->
+        <div class="setting-group">
+          <div class="setting-label">배 경 색</div>
+          <div class="setting-buttons cols-3">
+            <button data-setting="bg" data-value="beige" class="bg-preview"><span class="bg-dot beige"></span>베이지</button>
+            <button data-setting="bg" data-value="sky" class="bg-preview"><span class="bg-dot sky"></span>하늘색</button>
+            <button data-setting="bg" data-value="gray" class="bg-preview"><span class="bg-dot gray"></span>회색</button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 
-  <!-- 책갈피 목록 모달 -->
+  <!-- 책갈피 모달 -->
   <div id="bookmark-menu" class="modal-overlay">
     <div class="modal-inner">
       <div class="modal-title">책갈피</div>
@@ -89,7 +115,7 @@
     </div>
   </div>
 
-  <!-- 책갈피 추가 알림 -->
+  <!-- 책갈피 토스트 -->
   <div id="bookmark-toast" class="bookmark-toast"></div>
 
   <script src="sutras-data.js"></script>

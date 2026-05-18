@@ -2,17 +2,17 @@
    나마 시바이 — 거룩한 다섯 음절 경전 모음
    ───────────────────────────────────────────── */
 
-/* 경기천년바탕체 */
+/* 경기천년바탕체 — 절대 경로로도 한 번 더 명시 */
 @font-face {
   font-family: 'Gyeonggi Batang';
-  src: url('fonts/gyeonggi-regular.woff') format('woff');
+  src: url('./fonts/gyeonggi-regular.woff') format('woff');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Gyeonggi Batang';
-  src: url('fonts/gyeonggi-bold.woff') format('woff');
+  src: url('./fonts/gyeonggi-bold.woff') format('woff');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -114,7 +114,6 @@ body {
   margin: 30px 0;
 }
 
-/* "나마 시바이" — 한 줄에 담기도록 크기 줄임 */
 .cover-title {
   font-family: 'Gyeonggi Batang', 'Nanum Myeongjo', 'Noto Serif KR', serif;
   font-size: 48px;
@@ -227,7 +226,6 @@ body {
   background: rgba(212, 175, 100, 0.15);
 }
 
-/* 책갈피 활성 표시 점 */
 .btn-icon.has-bookmarks::after {
   content: '';
   position: absolute;
@@ -339,7 +337,6 @@ body {
   line-height: 1.4;
 }
 
-/* 책갈피 활성 상태 */
 .btn-icon.bookmark-active {
   color: #f4d589;
 }
@@ -348,44 +345,94 @@ body {
   filter: drop-shadow(0 0 4px rgba(244, 213, 137, 0.6));
 }
 
+/* ── 읽기 본문 — 글꼴 / 배경색 두 가지 모두 설정 가능 ── */
 .reader-content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 32px 24px 60px 24px;
   -webkit-overflow-scrolling: touch;
+  color: var(--reader-text-color, #2a1f15);
+  letter-spacing: 0;
+  word-spacing: normal;
+  /* 본디 베이지 — 기본값 */
   background:
-    repeating-linear-gradient(
-      90deg,
-      transparent 0px,
-      transparent 2px,
-      rgba(180, 135, 70, 0.015) 2px,
-      rgba(180, 135, 70, 0.015) 3px
-    ),
-    repeating-linear-gradient(
-      0deg,
-      transparent 0px,
-      transparent 2px,
-      rgba(180, 135, 70, 0.015) 2px,
-      rgba(180, 135, 70, 0.015) 3px
-    ),
+    repeating-linear-gradient(90deg, transparent 0px, transparent 2px, rgba(180, 135, 70, 0.015) 2px, rgba(180, 135, 70, 0.015) 3px),
+    repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(180, 135, 70, 0.015) 2px, rgba(180, 135, 70, 0.015) 3px),
     radial-gradient(circle at 20% 30%, rgba(212, 175, 100, 0.04) 0%, transparent 30%),
     radial-gradient(circle at 70% 70%, rgba(180, 135, 70, 0.04) 0%, transparent 30%),
     radial-gradient(circle at 50% 50%, rgba(244, 213, 137, 0.05) 0%, transparent 50%),
     linear-gradient(135deg, #f5ead2 0%, #efe1bf 50%, #f5ead2 100%);
-  color: #2a1f15;
-  letter-spacing: 0;
-  word-spacing: normal;
+}
+
+/* ── 배경색 — 베이지 ── */
+.reader-content.bg-beige {
+  background:
+    repeating-linear-gradient(90deg, transparent 0px, transparent 2px, rgba(180, 135, 70, 0.015) 2px, rgba(180, 135, 70, 0.015) 3px),
+    repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(180, 135, 70, 0.015) 2px, rgba(180, 135, 70, 0.015) 3px),
+    radial-gradient(circle at 20% 30%, rgba(212, 175, 100, 0.04) 0%, transparent 30%),
+    radial-gradient(circle at 70% 70%, rgba(180, 135, 70, 0.04) 0%, transparent 30%),
+    radial-gradient(circle at 50% 50%, rgba(244, 213, 137, 0.05) 0%, transparent 50%),
+    linear-gradient(135deg, #f5ead2 0%, #efe1bf 50%, #f5ead2 100%);
+  --reader-text-color: #2a1f15;
+  --reader-chapter-color: #4a2f15;
+  --reader-subhead-color: #5a3b1a;
+  --reader-commentary-bg: rgba(212, 175, 100, 0.1);
+  --reader-commentary-border: rgba(180, 135, 70, 0.55);
+  --reader-commentary-color: #5a3b1a;
+  --reader-sanskrit-color: #6b4423;
+  --reader-separator-color: rgba(180, 135, 70, 0.65);
+  --reader-chapter-border: rgba(180, 135, 70, 0.4);
+}
+
+/* ── 배경색 — 하늘색 ── */
+.reader-content.bg-sky {
+  background:
+    repeating-linear-gradient(90deg, transparent 0px, transparent 2px, rgba(60, 100, 140, 0.015) 2px, rgba(60, 100, 140, 0.015) 3px),
+    repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(60, 100, 140, 0.015) 2px, rgba(60, 100, 140, 0.015) 3px),
+    radial-gradient(circle at 20% 30%, rgba(120, 170, 210, 0.05) 0%, transparent 30%),
+    radial-gradient(circle at 70% 70%, rgba(100, 150, 195, 0.05) 0%, transparent 30%),
+    radial-gradient(circle at 50% 50%, rgba(180, 215, 240, 0.05) 0%, transparent 50%),
+    linear-gradient(135deg, #e6f0f8 0%, #d5e6f2 50%, #e6f0f8 100%);
+  --reader-text-color: #1f2a3a;
+  --reader-chapter-color: #1a3a5a;
+  --reader-subhead-color: #2a4a6a;
+  --reader-commentary-bg: rgba(120, 170, 210, 0.12);
+  --reader-commentary-border: rgba(80, 130, 175, 0.55);
+  --reader-commentary-color: #2a4a6a;
+  --reader-sanskrit-color: #1a4060;
+  --reader-separator-color: rgba(80, 130, 175, 0.65);
+  --reader-chapter-border: rgba(80, 130, 175, 0.4);
+}
+
+/* ── 배경색 — 회색 ── */
+.reader-content.bg-gray {
+  background:
+    repeating-linear-gradient(90deg, transparent 0px, transparent 2px, rgba(80, 80, 80, 0.015) 2px, rgba(80, 80, 80, 0.015) 3px),
+    repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(80, 80, 80, 0.015) 2px, rgba(80, 80, 80, 0.015) 3px),
+    radial-gradient(circle at 20% 30%, rgba(140, 140, 140, 0.04) 0%, transparent 30%),
+    radial-gradient(circle at 70% 70%, rgba(110, 110, 110, 0.04) 0%, transparent 30%),
+    radial-gradient(circle at 50% 50%, rgba(180, 180, 180, 0.05) 0%, transparent 50%),
+    linear-gradient(135deg, #e8e8e6 0%, #dcdcd9 50%, #e8e8e6 100%);
+  --reader-text-color: #2a2a2a;
+  --reader-chapter-color: #1a1a1a;
+  --reader-subhead-color: #333333;
+  --reader-commentary-bg: rgba(100, 100, 100, 0.1);
+  --reader-commentary-border: rgba(80, 80, 80, 0.55);
+  --reader-commentary-color: #333333;
+  --reader-sanskrit-color: #2a2a2a;
+  --reader-separator-color: rgba(100, 100, 100, 0.65);
+  --reader-chapter-border: rgba(100, 100, 100, 0.4);
 }
 
 .reader-content h2.chapter {
-  font-family: 'Gyeonggi Batang', 'Nanum Myeongjo', serif;
+  font-family: var(--reader-font-family, 'Gyeonggi Batang', 'Nanum Myeongjo', serif);
   font-size: calc(var(--reader-font-size, 17px) * 1.3);
   font-weight: 700;
-  color: #4a2f15;
+  color: var(--reader-chapter-color, #4a2f15);
   margin: 36px 0 20px 0;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(180, 135, 70, 0.4);
+  border-bottom: 1px solid var(--reader-chapter-border, rgba(180, 135, 70, 0.4));
   letter-spacing: 0.5px;
   line-height: 1.5;
   text-align: center;
@@ -396,23 +443,21 @@ body {
 }
 
 .reader-content h3.subhead {
-  font-family: 'Gyeonggi Batang', 'Nanum Myeongjo', serif;
+  font-family: var(--reader-font-family, 'Gyeonggi Batang', 'Nanum Myeongjo', serif);
   font-size: calc(var(--reader-font-size, 17px) * 1.1);
   font-weight: 700;
-  color: #5a3b1a;
+  color: var(--reader-subhead-color, #5a3b1a);
   margin: 28px 0 14px 0;
   letter-spacing: 0.3px;
   line-height: 1.5;
 }
 
-/* 본문 단락 — 글자 간격이 어떤 크기에서도 일정하게 */
 .reader-content p {
-  font-family: 'Gyeonggi Batang', 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-family: var(--reader-font-family, 'Gyeonggi Batang', 'Noto Serif KR', 'Nanum Myeongjo', serif);
   font-size: var(--reader-font-size, 17px);
   line-height: 1.95;
-  color: #2a1f15;
+  color: var(--reader-text-color, #2a1f15);
   margin: 0 0 18px 0;
-  /* text-align: justify를 사용하지 않음 — 자간이 늘어나는 문제 막음 */
   text-align: left;
   word-break: keep-all;
   overflow-wrap: break-word;
@@ -423,10 +468,10 @@ body {
 
 .reader-content p.commentary {
   font-style: italic;
-  color: #5a3b1a;
-  background: rgba(212, 175, 100, 0.1);
+  color: var(--reader-commentary-color, #5a3b1a);
+  background: var(--reader-commentary-bg, rgba(212, 175, 100, 0.1));
   padding: 14px 18px;
-  border-left: 3px solid rgba(180, 135, 70, 0.55);
+  border-left: 3px solid var(--reader-commentary-border, rgba(180, 135, 70, 0.55));
   margin: 14px 0 22px 0;
   border-radius: 0 4px 4px 0;
   text-indent: 0;
@@ -437,19 +482,19 @@ body {
 
 .reader-content em {
   font-style: italic;
-  color: #5a3b1a;
+  color: var(--reader-subhead-color, #5a3b1a);
 }
 
 .reader-content strong {
   font-weight: 700;
-  color: #4a2f15;
+  color: var(--reader-chapter-color, #4a2f15);
 }
 
 .reader-content .sanskrit {
   font-family: 'Noto Serif KR', serif;
   text-align: center;
   font-size: calc(var(--reader-font-size, 17px) + 1px);
-  color: #6b4423;
+  color: var(--reader-sanskrit-color, #6b4423);
   margin: 22px 0;
   letter-spacing: 0.5px;
   font-weight: 500;
@@ -459,16 +504,24 @@ body {
   text-align: center;
   font-size: 16px;
   letter-spacing: 4px;
-  color: rgba(180, 135, 70, 0.65);
+  color: var(--reader-separator-color, rgba(180, 135, 70, 0.65));
   margin: 32px 0;
   font-weight: 400;
 }
 
-/* 글씨 크기 단계 */
-.reader-content.font-small { --reader-font-size: 15px; }
-.reader-content.font-medium { --reader-font-size: 17px; }
-.reader-content.font-large { --reader-font-size: 19px; }
-.reader-content.font-xlarge { --reader-font-size: 21px; }
+/* 글꼴 종류 */
+.reader-content.font-gyeonggi {
+  --reader-font-family: 'Gyeonggi Batang', 'Noto Serif KR', 'Nanum Myeongjo', serif;
+}
+.reader-content.font-nanum {
+  --reader-font-family: 'Nanum Myeongjo', 'Noto Serif KR', serif;
+}
+
+/* 글씨 크기 */
+.reader-content.size-small { --reader-font-size: 15px; }
+.reader-content.size-medium { --reader-font-size: 17px; }
+.reader-content.size-large { --reader-font-size: 19px; }
+.reader-content.size-xlarge { --reader-font-size: 21px; }
 
 /* 위로 가는 버튼 */
 .btn-scroll-top {
@@ -498,7 +551,7 @@ body {
   transform: scale(0.95);
 }
 
-/* ── 모달 (글씨 크기 / 책갈피) ── */
+/* ── 모달 ── */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -521,10 +574,10 @@ body {
   background: linear-gradient(180deg, #1a1410 0%, #0d0906 100%);
   border: 1px solid rgba(212, 175, 100, 0.4);
   border-radius: 8px;
-  padding: 30px;
-  max-width: 400px;
+  padding: 26px 26px;
+  max-width: 420px;
   width: 100%;
-  max-height: 80vh;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -546,7 +599,7 @@ body {
   color: #d4af64;
   text-align: center;
   letter-spacing: 4px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   flex-shrink: 0;
 }
 
@@ -555,34 +608,76 @@ body {
   flex: 1;
 }
 
-.font-menu-buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+/* 설정 모달 안의 한 자리(글꼴/크기/배경)마다의 묶음 */
+.setting-group {
+  margin-bottom: 22px;
 }
 
-.font-menu-buttons button {
+.setting-group:last-child {
+  margin-bottom: 0;
+}
+
+.setting-label {
+  font-family: 'Gyeonggi Batang', 'Nanum Myeongjo', serif;
+  font-size: 13px;
+  color: rgba(212, 175, 100, 0.7);
+  letter-spacing: 3px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.setting-buttons {
+  display: grid;
+  gap: 8px;
+}
+
+.setting-buttons.cols-2 { grid-template-columns: 1fr 1fr; }
+.setting-buttons.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.setting-buttons.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+.setting-buttons button {
   background: transparent;
   color: rgba(212, 175, 100, 0.85);
   border: 1px solid rgba(212, 175, 100, 0.3);
   font-family: inherit;
-  font-size: 15px;
-  padding: 12px;
+  font-size: 14px;
+  padding: 11px 6px;
   cursor: pointer;
   border-radius: 4px;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   transition: all 0.2s ease;
 }
 
-.font-menu-buttons button.active {
-  background: rgba(212, 175, 100, 0.15);
+.setting-buttons button.active {
+  background: rgba(212, 175, 100, 0.18);
   color: #f4d589;
-  border-color: rgba(212, 175, 100, 0.6);
+  border-color: rgba(212, 175, 100, 0.7);
 }
 
-.font-menu-buttons button:active {
+.setting-buttons button:active {
   background: rgba(212, 175, 100, 0.25);
 }
+
+/* 배경색 미리보기 동그라미 더해진 버튼 */
+.setting-buttons button.bg-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.bg-dot {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.bg-dot.beige { background: linear-gradient(135deg, #f5ead2, #efe1bf); }
+.bg-dot.sky { background: linear-gradient(135deg, #e6f0f8, #d5e6f2); }
+.bg-dot.gray { background: linear-gradient(135deg, #e8e8e6, #dcdcd9); }
 
 /* 책갈피 목록 */
 .bookmark-empty {
@@ -661,7 +756,7 @@ body {
   color: #f4d589;
 }
 
-/* 책갈피 추가 알림 */
+/* 책갈피 토스트 */
 .bookmark-toast {
   position: fixed;
   bottom: 100px;
