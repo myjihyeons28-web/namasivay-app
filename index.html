@@ -11,9 +11,10 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="stylesheet" href="styles.css">
+  <!-- Fallback 폰트 (오프라인 때는 경기천년바탕만 사용됨) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600;700&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -36,7 +37,9 @@
         <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M3 13h18v-2H3v2z M10 5l-7 7 7 7V5z"/></svg>
       </button>
       <h2 class="list-title">경전 모음</h2>
-      <div class="list-header-spacer"></div>
+      <button id="btn-list-bookmarks" class="btn-icon" aria-label="책갈피 목록">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+      </button>
     </header>
     <div class="list-content" id="list-content"></div>
   </section>
@@ -48,6 +51,9 @@
         <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M3 13h18v-2H3v2z M10 5l-7 7 7 7V5z"/></svg>
       </button>
       <h2 class="reader-title" id="reader-title"></h2>
+      <button id="btn-toggle-bookmark" class="btn-icon" aria-label="책갈피 추가/제거">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+      </button>
       <button id="btn-font-size" class="btn-icon" aria-label="글씨 크기">
         <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M9 4v3h5v12h3V7h5V4H9zm-6 8h3v7h3v-7h3V9H3v3z"/></svg>
       </button>
@@ -58,23 +64,37 @@
     </button>
   </section>
 
-  <!-- 글씨 크기 설정 메뉴 -->
-  <div id="font-menu" class="font-menu">
-    <div class="font-menu-inner">
-      <div class="font-menu-title">글씨 크기</div>
-      <div class="font-menu-buttons">
-        <button data-size="small">작게</button>
-        <button data-size="medium" class="active">보통</button>
-        <button data-size="large">크게</button>
-        <button data-size="xlarge">아주 크게</button>
+  <!-- 글씨 크기 모달 -->
+  <div id="font-menu" class="modal-overlay">
+    <div class="modal-inner">
+      <div class="modal-title">글씨 크기</div>
+      <div class="modal-body">
+        <div class="font-menu-buttons">
+          <button data-size="small">작게</button>
+          <button data-size="medium" class="active">보통</button>
+          <button data-size="large">크게</button>
+          <button data-size="xlarge">아주 크게</button>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- 책갈피 목록 모달 -->
+  <div id="bookmark-menu" class="modal-overlay">
+    <div class="modal-inner">
+      <div class="modal-title">책갈피</div>
+      <div class="modal-body">
+        <div id="bookmark-list-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 책갈피 추가 알림 -->
+  <div id="bookmark-toast" class="bookmark-toast"></div>
+
   <script src="sutras-data.js"></script>
   <script src="app.js"></script>
   <script>
-    // Service Worker 등록
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').catch(err => console.log('SW reg failed:', err));
