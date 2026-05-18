@@ -28,6 +28,11 @@
   const bookmarkListContent = document.getElementById('bookmark-list-content');
   const bookmarkToast = document.getElementById('bookmark-toast');
 
+  // 목차 자리
+  const btnToc = document.getElementById('btn-toc');
+  const tocMenu = document.getElementById('toc-menu');
+  const tocListContent = document.getElementById('toc-list-content');
+
   // 검색 자리
   const searchInput = document.getElementById('search-input');
   const searchClear = document.getElementById('search-clear');
@@ -658,5 +663,67 @@
   buildList();
   applySettings();
   updateBookmarkIndicator();
+
+  // ───────────────────────────────────────
+  // 목차
+  // ───────────────────────────────────────
+  btnToc.addEventListener('click', () => {
+    renderToc();
+    tocMenu.classList.add('active');
+  });
+
+  tocMenu.addEventListener('click', e => {
+    if (e.target === tocMenu) tocMenu.classList.remove('active');
+  });
+
+  function renderToc() {
+    if (!currentSutraId) {
+      tocListContent.innerHTML = '<div class="toc-empty">경전을 펴신 후에 목차가 한 자리에 모입니다.</div>';
+      return;
+    }
+
+    // 본문 안의 모든 h2.chapter와 h3.subhead를 한 자리에 모음
+    const headings = readerContent.querySelectorAll('h2.chapter, h3.subhead');
+    if (headings.length === 0) {
+      tocListContent.innerHTML = '<div class="toc-empty">이 경전에는 따로 나뉜 장이 없습니다.<br><br>본문을 그대로 한 호흡씩 펴 보십시오.</div>';
+      return;
+    }
+
+    let html = '';
+    headings.forEach((h, idx) => {
+      const text = (h.textContent || '').trim();
+      if (!text) return;
+      const level = h.tagName === 'H2' ? 2 : 3;
+      // 본문 안에서 그 자리로 옮길 수 있도록 한 id를 더해 둠
+      if (!h.id) {
+        h.id = 'toc-target-' + idx;
+      }
+      html += `<div class="toc-item level-${level}" data-target="${h.id}">${escapeHtml(text)}</div>`;
+    });
+
+    if (!html) {
+      tocListContent.innerHTML = '<div class="toc-empty">이 경전에는 따로 나뉜 장이 없습니다.<br><br>본문을 그대로 한 호흡씩 펴 보십시오.</div>';
+      return;
+    }
+
+    tocListContent.innerHTML = html;
+
+    tocListContent.querySelectorAll('.toc-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const targetId = item.getAttribute('data-target');
+        const targetEl = readerContent.querySelector('#' + CSS.escape(targetId));
+        tocMenu.classList.remove('active');
+        if (targetEl) {
+          // 헤더 자리 아래로 한 작은 여유를 두고 옮김
+          const rect = targetEl.getBoundingClientRect();
+          const contentRect = readerContent.getBoundingClientRect();
+          const offset = rect.top - contentRect.top + readerContent.scrollTop - 16;
+          requestAnimationFrame(() => {
+            readerContent.scrollTo({ top: Math.max(0, offset), behavior: 'smooth' });
+          });
+        }
+      });
+    });
+  }
 
 })();
