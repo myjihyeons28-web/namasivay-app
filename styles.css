@@ -2,7 +2,6 @@
    나마 시바이 — 거룩한 다섯 음절 경전 모음
    ───────────────────────────────────────────── */
 
-/* 경기천년바탕체 — 절대 경로로도 한 번 더 명시 */
 @font-face {
   font-family: 'Gyeonggi Batang';
   src: url('./fonts/gyeonggi-regular.woff') format('woff');
@@ -42,7 +41,6 @@ body {
   color: #2a1f15;
 }
 
-/* 화면 공통 */
 .screen {
   position: fixed;
   top: 0;
@@ -237,11 +235,79 @@ body {
   background: #f4d589;
 }
 
+/* ── 검색 자리 — 경전 목록 화면 ── */
+.search-bar {
+  padding: 12px 16px 4px 16px;
+  background: rgba(13, 9, 6, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 4;
+}
+
+.search-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(212, 175, 100, 0.08);
+  border: 1px solid rgba(212, 175, 100, 0.3);
+  border-radius: 22px;
+  padding: 0 14px;
+}
+
+.search-input-wrap svg {
+  color: rgba(212, 175, 100, 0.65);
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f4d589;
+  font-family: inherit;
+  font-size: 15px;
+  padding: 10px 0;
+  letter-spacing: 0.5px;
+}
+
+.search-input::placeholder {
+  color: rgba(212, 175, 100, 0.5);
+  letter-spacing: 1px;
+}
+
+.search-clear {
+  background: transparent;
+  border: none;
+  color: rgba(212, 175, 100, 0.55);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.search-clear.visible {
+  display: flex;
+}
+
+.search-clear:active {
+  background: rgba(212, 175, 100, 0.2);
+  color: #f4d589;
+}
+
 .list-content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 20px 16px 40px 16px;
+  padding: 12px 16px 40px 16px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -301,6 +367,67 @@ body {
   letter-spacing: 1px;
 }
 
+/* ── 검색 결과 — 전체 검색 ── */
+.search-results-info {
+  font-size: 13px;
+  color: rgba(212, 175, 100, 0.65);
+  letter-spacing: 1px;
+  text-align: center;
+  padding: 14px 10px 6px 10px;
+}
+
+.search-result-item {
+  background: linear-gradient(180deg, rgba(212, 175, 100, 0.06) 0%, rgba(180, 135, 70, 0.04) 100%);
+  border: 1px solid rgba(212, 175, 100, 0.25);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  position: relative;
+}
+
+.search-result-item:active {
+  background: linear-gradient(180deg, rgba(212, 175, 100, 0.15) 0%, rgba(180, 135, 70, 0.1) 100%);
+}
+
+.search-result-sutra {
+  font-family: 'Gyeonggi Batang', 'Nanum Myeongjo', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #f4d589;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.search-result-snippet {
+  font-size: 13px;
+  color: rgba(212, 175, 100, 0.85);
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.search-result-snippet mark {
+  background: rgba(244, 213, 137, 0.35);
+  color: #fff;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.search-result-count {
+  font-size: 11px;
+  color: rgba(212, 175, 100, 0.5);
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+}
+
+.search-no-results {
+  text-align: center;
+  color: rgba(212, 175, 100, 0.55);
+  font-size: 14px;
+  padding: 40px 20px;
+  letter-spacing: 1px;
+}
+
 /* ── 경전 읽기 ── */
 .screen-reader {
   background: #f5ead2;
@@ -330,7 +457,7 @@ body {
   font-weight: 500;
   letter-spacing: 1px;
   color: #d4af64;
-  padding: 0 8px;
+  padding: 0 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -345,7 +472,127 @@ body {
   filter: drop-shadow(0 0 4px rgba(244, 213, 137, 0.6));
 }
 
-/* ── 읽기 본문 — 글꼴 / 배경색 두 가지 모두 설정 가능 ── */
+/* 본문 안의 검색 바 — 읽기 화면 위쪽 추가 자리 */
+.in-reader-search {
+  display: none;
+  align-items: center;
+  background: rgba(13, 9, 6, 0.92);
+  border-bottom: 1px solid rgba(212, 175, 100, 0.3);
+  padding: 8px 10px;
+  gap: 8px;
+  position: sticky;
+  top: env(safe-area-inset-top, 0);
+  z-index: 4;
+}
+
+.in-reader-search.active {
+  display: flex;
+}
+
+.in-reader-search-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: rgba(212, 175, 100, 0.1);
+  border: 1px solid rgba(212, 175, 100, 0.35);
+  border-radius: 18px;
+  padding: 0 12px;
+}
+
+.in-reader-search-wrap svg {
+  color: rgba(212, 175, 100, 0.65);
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+
+.in-reader-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f4d589;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 0;
+}
+
+.in-reader-search-input::placeholder {
+  color: rgba(212, 175, 100, 0.5);
+}
+
+.in-reader-search-info {
+  color: rgba(212, 175, 100, 0.75);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.in-reader-search-nav {
+  display: flex;
+  gap: 2px;
+}
+
+.in-reader-search-nav button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: rgba(212, 175, 100, 0.85);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.in-reader-search-nav button:active {
+  background: rgba(212, 175, 100, 0.15);
+  color: #f4d589;
+}
+
+.in-reader-search-nav button:disabled {
+  opacity: 0.35;
+}
+
+.in-reader-search-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: rgba(212, 175, 100, 0.85);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.in-reader-search-close:active {
+  background: rgba(212, 175, 100, 0.15);
+}
+
+/* ── 진행 막대 — 위쪽 가는 금빛 ── */
+.reading-progress {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 2px;
+  background: rgba(212, 175, 100, 0.15);
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.reading-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #d4af64 0%, #f4d589 50%, #d4af64 100%);
+  width: 0%;
+  transition: width 0.15s ease-out;
+  box-shadow: 0 0 6px rgba(244, 213, 137, 0.4);
+}
+
+/* ── 읽기 본문 ── */
 .reader-content {
   flex: 1;
   overflow-y: auto;
@@ -355,17 +602,8 @@ body {
   color: var(--reader-text-color, #2a1f15);
   letter-spacing: 0;
   word-spacing: normal;
-  /* 본디 베이지 — 기본값 */
-  background:
-    repeating-linear-gradient(90deg, transparent 0px, transparent 2px, rgba(180, 135, 70, 0.015) 2px, rgba(180, 135, 70, 0.015) 3px),
-    repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(180, 135, 70, 0.015) 2px, rgba(180, 135, 70, 0.015) 3px),
-    radial-gradient(circle at 20% 30%, rgba(212, 175, 100, 0.04) 0%, transparent 30%),
-    radial-gradient(circle at 70% 70%, rgba(180, 135, 70, 0.04) 0%, transparent 30%),
-    radial-gradient(circle at 50% 50%, rgba(244, 213, 137, 0.05) 0%, transparent 50%),
-    linear-gradient(135deg, #f5ead2 0%, #efe1bf 50%, #f5ead2 100%);
 }
 
-/* ── 배경색 — 베이지 ── */
 .reader-content.bg-beige {
   background:
     repeating-linear-gradient(90deg, transparent 0px, transparent 2px, rgba(180, 135, 70, 0.015) 2px, rgba(180, 135, 70, 0.015) 3px),
@@ -383,9 +621,10 @@ body {
   --reader-sanskrit-color: #6b4423;
   --reader-separator-color: rgba(180, 135, 70, 0.65);
   --reader-chapter-border: rgba(180, 135, 70, 0.4);
+  --reader-search-highlight: rgba(244, 175, 80, 0.45);
+  --reader-search-current: rgba(255, 140, 30, 0.75);
 }
 
-/* ── 배경색 — 하늘색 ── */
 .reader-content.bg-sky {
   background:
     repeating-linear-gradient(90deg, transparent 0px, transparent 2px, rgba(60, 100, 140, 0.015) 2px, rgba(60, 100, 140, 0.015) 3px),
@@ -403,9 +642,10 @@ body {
   --reader-sanskrit-color: #1a4060;
   --reader-separator-color: rgba(80, 130, 175, 0.65);
   --reader-chapter-border: rgba(80, 130, 175, 0.4);
+  --reader-search-highlight: rgba(80, 150, 230, 0.4);
+  --reader-search-current: rgba(40, 100, 200, 0.7);
 }
 
-/* ── 배경색 — 회색 ── */
 .reader-content.bg-gray {
   background:
     repeating-linear-gradient(90deg, transparent 0px, transparent 2px, rgba(80, 80, 80, 0.015) 2px, rgba(80, 80, 80, 0.015) 3px),
@@ -423,6 +663,8 @@ body {
   --reader-sanskrit-color: #2a2a2a;
   --reader-separator-color: rgba(100, 100, 100, 0.65);
   --reader-chapter-border: rgba(100, 100, 100, 0.4);
+  --reader-search-highlight: rgba(140, 140, 140, 0.5);
+  --reader-search-current: rgba(60, 60, 60, 0.85);
 }
 
 .reader-content h2.chapter {
@@ -507,6 +749,19 @@ body {
   color: var(--reader-separator-color, rgba(180, 135, 70, 0.65));
   margin: 32px 0;
   font-weight: 400;
+}
+
+/* 검색 강조 표시 */
+.reader-content mark.search-hit {
+  background: var(--reader-search-highlight, rgba(244, 175, 80, 0.45));
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.reader-content mark.search-hit.current {
+  background: var(--reader-search-current, rgba(255, 140, 30, 0.75));
+  color: #fff;
 }
 
 /* 글꼴 종류 */
@@ -608,7 +863,6 @@ body {
   flex: 1;
 }
 
-/* 설정 모달 안의 한 자리(글꼴/크기/배경)마다의 묶음 */
 .setting-group {
   margin-bottom: 22px;
 }
@@ -658,7 +912,6 @@ body {
   background: rgba(212, 175, 100, 0.25);
 }
 
-/* 배경색 미리보기 동그라미 더해진 버튼 */
 .setting-buttons button.bg-preview {
   display: flex;
   align-items: center;
@@ -679,7 +932,7 @@ body {
 .bg-dot.sky { background: linear-gradient(135deg, #e6f0f8, #d5e6f2); }
 .bg-dot.gray { background: linear-gradient(135deg, #e8e8e6, #dcdcd9); }
 
-/* 책갈피 목록 */
+/* 책갈피 */
 .bookmark-empty {
   text-align: center;
   color: rgba(212, 175, 100, 0.65);
@@ -748,7 +1001,6 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: all 0.2s;
 }
 
 .bookmark-item-delete:active {
@@ -756,7 +1008,6 @@ body {
   color: #f4d589;
 }
 
-/* 책갈피 토스트 */
 .bookmark-toast {
   position: fixed;
   bottom: 100px;
@@ -781,7 +1032,7 @@ body {
   opacity: 1;
 }
 
-/* ── 큰 화면 (아이패드) ── */
+/* 큰 화면 */
 @media (min-width: 768px) {
   .cover-title {
     font-size: 60px;
@@ -799,9 +1050,13 @@ body {
     margin: 0 auto;
     width: 100%;
   }
+  .search-bar {
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+  }
 }
 
-/* iOS Safari 보정 */
 @supports (-webkit-touch-callout: none) {
   .reader-content {
     padding-bottom: calc(60px + env(safe-area-inset-bottom));

@@ -28,9 +28,24 @@
   const bookmarkListContent = document.getElementById('bookmark-list-content');
   const bookmarkToast = document.getElementById('bookmark-toast');
 
+  // 검색 자리
+  const searchInput = document.getElementById('search-input');
+  const searchClear = document.getElementById('search-clear');
+
+  const btnInSearch = document.getElementById('btn-in-search');
+  const inReaderSearch = document.getElementById('in-reader-search');
+  const inReaderSearchInput = document.getElementById('in-reader-search-input');
+  const inReaderSearchInfo = document.getElementById('in-reader-search-info');
+  const btnSearchPrev = document.getElementById('btn-search-prev');
+  const btnSearchNext = document.getElementById('btn-search-next');
+  const btnInSearchClose = document.getElementById('btn-in-search-close');
+
+  // 진행 막대
+  const readingProgressBar = document.getElementById('reading-progress-bar');
+
   let currentSutraId = null;
 
-  // ── 읽기 설정 (글꼴/크기/배경색) ──
+  // ── 읽기 설정 ──
   const settings = {
     font: localStorage.getItem('reader_font') || 'gyeonggi',
     size: localStorage.getItem('reader_size') || 'medium',
@@ -38,7 +53,6 @@
   };
 
   function applySettings() {
-    // 기존 클래스 모두 정리
     const classesToRemove = [];
     readerContent.classList.forEach(cls => {
       if (cls.startsWith('font-') || cls.startsWith('size-') || cls.startsWith('bg-')) {
@@ -47,12 +61,10 @@
     });
     classesToRemove.forEach(cls => readerContent.classList.remove(cls));
 
-    // 새 클래스 적용
     readerContent.classList.add('font-' + settings.font);
     readerContent.classList.add('size-' + settings.size);
     readerContent.classList.add('bg-' + settings.bg);
 
-    // 모달의 버튼 활성 상태 갱신
     settingsButtons.forEach(btn => {
       const setting = btn.getAttribute('data-setting');
       const value = btn.getAttribute('data-value');
@@ -66,7 +78,6 @@
     applySettings();
   }
 
-  // 모달의 모든 버튼에 클릭 이벤트
   settingsButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const setting = btn.getAttribute('data-setting');
@@ -82,6 +93,10 @@
     if (target === screenList) {
       updateBookmarkIndicator();
     }
+    if (target !== screenReader) {
+      // 본문 검색 자리 닫음
+      closeInReaderSearch();
+    }
   }
 
   btnEnter.addEventListener('click', () => showScreen(screenList));
@@ -92,6 +107,10 @@
   function escapeHtml(s) {
     if (s == null) return '';
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function escapeRegex(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   // ── 경전 목록 ──
@@ -130,7 +149,7 @@
   }
 
   // ── 경전 펴기 ──
-  function openSutra(id, scrollPos) {
+  function openSutra(id, scrollPos, searchQuery) {
     const sutra = SUTRAS_DATA.find(s => s.id === id);
     if (!sutra) {
       console.error('Sutra not found:', id);
@@ -141,17 +160,27 @@
     applySettings();
     currentSutraId = id;
     updateBookmarkToggleButton();
+    closeInReaderSearch();
 
     const savedScroll = scrollPos !== undefined ? scrollPos : parseInt(localStorage.getItem('scroll_' + id) || '0');
     showScreen(screenReader);
+
     requestAnimationFrame(() => {
       readerContent.scrollTop = savedScroll;
+      updateProgressBar();
+
+      // 검색어가 주어졌으면 검색 자리 열고 그 자리로 옮김
+      if (searchQuery) {
+        openInReaderSearch(searchQuery);
+      }
     });
   }
 
-  // ── 스크롤 위치 저장 ──
+  // ── 스크롤 자리 ──
   let scrollSaveTimer = null;
   let bookmarkUpdateTimer = null;
+  let progressUpdateTimer = null;
+
   readerContent.addEventListener('scroll', () => {
     if (readerContent.scrollTop > 400) {
       btnScrollTop.classList.add('visible');
@@ -166,17 +195,298 @@
     }
     clearTimeout(bookmarkUpdateTimer);
     bookmarkUpdateTimer = setTimeout(updateBookmarkToggleButton, 300);
+
+    // 진행 막대 갱신
+    clearTimeout(progressUpdateTimer);
+    progressUpdateTimer = setTimeout(updateProgressBar, 10);
   });
 
   btnScrollTop.addEventListener('click', () => {
     readerContent.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // ── 읽기 설정 모달 ──
+  // ── 진행 막대 ──
+  function updateProgressBar() {
+    const scrollTop = readerContent.scrollTop;
+    const scrollHeight = readerContent.scrollHeight;
+    const clientHeight = readerContent.clientHeight;
+    const maxScroll = scrollHeight - clientHeight;
+    if (maxScroll <= 0) {
+      readingProgressBar.style.width = '0%';
+      return;
+    }
+    const percent = Math.min(100, Math.max(0, (scrollTop / maxScroll) * 100));
+    readingProgressBar.style.width = percent + '%';
+  }
+
+  // ── 설정 모달 ──
   btnReaderSettings.addEventListener('click', () => settingsMenu.classList.add('active'));
   settingsMenu.addEventListener('click', e => {
     if (e.target === settingsMenu) settingsMenu.classList.remove('active');
   });
+
+  // ───────────────────────────────────────
+  // 전체 검색 (경전 목록 화면)
+  // ───────────────────────────────────────
+  let searchDebounceTimer = null;
+
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.trim();
+    searchClear.classList.toggle('visible', query.length > 0);
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      if (query.length === 0) {
+        buildList();
+      } else {
+        renderGlobalSearchResults(query);
+      }
+    }, 200);
+  });
+
+  searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    searchClear.classList.remove('visible');
+    buildList();
+    searchInput.focus();
+  });
+
+  function renderGlobalSearchResults(query) {
+    const results = [];
+    const lowerQuery = query.toLowerCase();
+
+    SUTRAS_DATA.forEach(sutra => {
+      // HTML 본문에서 텍스트만 뽑음
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = sutra.html;
+      const fullText = tempDiv.textContent || '';
+
+      // 검색어가 들어 있는지
+      const lowerText = fullText.toLowerCase();
+      let idx = lowerText.indexOf(lowerQuery);
+      if (idx === -1) return;
+
+      // 그 경전에서 검색어가 들어 있는 모든 자리 찾기
+      let count = 0;
+      let searchIdx = 0;
+      const snippets = [];
+      while ((searchIdx = lowerText.indexOf(lowerQuery, searchIdx)) !== -1) {
+        count++;
+        // 첫 세 자리만 미리보기 자리로 모음
+        if (snippets.length < 1) {
+          const start = Math.max(0, searchIdx - 30);
+          const end = Math.min(fullText.length, searchIdx + query.length + 50);
+          let snippet = fullText.substring(start, end);
+          if (start > 0) snippet = '…' + snippet;
+          if (end < fullText.length) snippet = snippet + '…';
+          snippets.push(snippet);
+        }
+        searchIdx += lowerQuery.length;
+      }
+
+      results.push({
+        sutra: sutra,
+        count: count,
+        snippet: snippets[0] || '',
+      });
+    });
+
+    // 검색어 들어 있는 횟수 많은 자리 먼저
+    results.sort((a, b) => b.count - a.count);
+
+    if (results.length === 0) {
+      listContent.innerHTML = `<div class="search-no-results">"${escapeHtml(query)}"<br>이 단어가 들어 있는 자리를 찾지 못했습니다</div>`;
+      return;
+    }
+
+    const re = new RegExp('(' + escapeRegex(query) + ')', 'gi');
+    let html = `<div class="search-results-info">"${escapeHtml(query)}" — ${results.length}개 경전에서 찾음</div>`;
+    results.forEach(r => {
+      const highlightedSnippet = escapeHtml(r.snippet).replace(re, '<mark>$1</mark>');
+      html += `
+        <div class="search-result-item" data-id="${escapeHtml(r.sutra.id)}" data-query="${escapeHtml(query)}">
+          <div class="search-result-sutra">${escapeHtml(r.sutra.title)}</div>
+          <div class="search-result-snippet">${highlightedSnippet}</div>
+          <div class="search-result-count">${r.count}회 들어 있음</div>
+        </div>
+      `;
+    });
+    listContent.innerHTML = html;
+
+    listContent.querySelectorAll('.search-result-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const id = item.getAttribute('data-id');
+        const q = item.getAttribute('data-query');
+        openSutra(id, 0, q);
+      });
+    });
+  }
+
+  // ───────────────────────────────────────
+  // 본문 안 검색
+  // ───────────────────────────────────────
+  let searchHitNodes = [];  // 검색 결과 노드들
+  let currentSearchIdx = -1;
+
+  function openInReaderSearch(query) {
+    inReaderSearch.classList.add('active');
+    if (query !== undefined) {
+      inReaderSearchInput.value = query;
+      performInReaderSearch(query);
+    } else {
+      setTimeout(() => inReaderSearchInput.focus(), 100);
+    }
+  }
+
+  function closeInReaderSearch() {
+    inReaderSearch.classList.remove('active');
+    clearInReaderSearchHighlights();
+    inReaderSearchInput.value = '';
+    searchHitNodes = [];
+    currentSearchIdx = -1;
+  }
+
+  btnInSearch.addEventListener('click', () => openInReaderSearch());
+  btnInSearchClose.addEventListener('click', closeInReaderSearch);
+
+  let inReaderSearchDebounce = null;
+  inReaderSearchInput.addEventListener('input', () => {
+    clearTimeout(inReaderSearchDebounce);
+    inReaderSearchDebounce = setTimeout(() => {
+      performInReaderSearch(inReaderSearchInput.value.trim());
+    }, 150);
+  });
+
+  inReaderSearchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (searchHitNodes.length > 0) {
+        goToNextSearchHit();
+      }
+    } else if (e.key === 'Escape') {
+      closeInReaderSearch();
+    }
+  });
+
+  btnSearchPrev.addEventListener('click', goToPrevSearchHit);
+  btnSearchNext.addEventListener('click', goToNextSearchHit);
+
+  function clearInReaderSearchHighlights() {
+    const marks = readerContent.querySelectorAll('mark.search-hit');
+    marks.forEach(mark => {
+      const parent = mark.parentNode;
+      while (mark.firstChild) {
+        parent.insertBefore(mark.firstChild, mark);
+      }
+      parent.removeChild(mark);
+      parent.normalize();
+    });
+  }
+
+  function performInReaderSearch(query) {
+    clearInReaderSearchHighlights();
+    searchHitNodes = [];
+    currentSearchIdx = -1;
+
+    if (!query || query.length === 0) {
+      inReaderSearchInfo.textContent = '0 / 0';
+      updateSearchNavButtons();
+      return;
+    }
+
+    const lowerQuery = query.toLowerCase();
+    // 텍스트 노드 가운데에서 검색어를 찾아 mark로 감쌈
+    const walker = document.createTreeWalker(readerContent, NodeFilter.SHOW_TEXT, null);
+    const textNodes = [];
+    let node;
+    while ((node = walker.nextNode())) {
+      // mark 안의 자리는 건너뜀
+      if (node.parentNode && node.parentNode.tagName === 'MARK') continue;
+      if (node.nodeValue && node.nodeValue.toLowerCase().indexOf(lowerQuery) !== -1) {
+        textNodes.push(node);
+      }
+    }
+
+    textNodes.forEach(textNode => {
+      const text = textNode.nodeValue;
+      const lowerText = text.toLowerCase();
+      const fragments = [];
+      let lastIdx = 0;
+      let idx;
+      while ((idx = lowerText.indexOf(lowerQuery, lastIdx)) !== -1) {
+        if (idx > lastIdx) {
+          fragments.push({ text: text.substring(lastIdx, idx), highlight: false });
+        }
+        fragments.push({ text: text.substring(idx, idx + query.length), highlight: true });
+        lastIdx = idx + query.length;
+      }
+      if (lastIdx < text.length) {
+        fragments.push({ text: text.substring(lastIdx), highlight: false });
+      }
+
+      const wrapper = document.createDocumentFragment();
+      fragments.forEach(f => {
+        if (f.highlight) {
+          const mark = document.createElement('mark');
+          mark.className = 'search-hit';
+          mark.textContent = f.text;
+          wrapper.appendChild(mark);
+          searchHitNodes.push(mark);
+        } else {
+          wrapper.appendChild(document.createTextNode(f.text));
+        }
+      });
+
+      textNode.parentNode.replaceChild(wrapper, textNode);
+    });
+
+    if (searchHitNodes.length > 0) {
+      currentSearchIdx = 0;
+      highlightCurrentSearch();
+    }
+    updateSearchInfo();
+    updateSearchNavButtons();
+  }
+
+  function highlightCurrentSearch() {
+    searchHitNodes.forEach(n => n.classList.remove('current'));
+    if (currentSearchIdx >= 0 && currentSearchIdx < searchHitNodes.length) {
+      const node = searchHitNodes[currentSearchIdx];
+      node.classList.add('current');
+      // 그 자리로 부드럽게 스크롤
+      const rect = node.getBoundingClientRect();
+      const contentRect = readerContent.getBoundingClientRect();
+      const offset = rect.top - contentRect.top + readerContent.scrollTop - (contentRect.height / 3);
+      readerContent.scrollTo({ top: offset, behavior: 'smooth' });
+    }
+  }
+
+  function goToNextSearchHit() {
+    if (searchHitNodes.length === 0) return;
+    currentSearchIdx = (currentSearchIdx + 1) % searchHitNodes.length;
+    highlightCurrentSearch();
+    updateSearchInfo();
+  }
+
+  function goToPrevSearchHit() {
+    if (searchHitNodes.length === 0) return;
+    currentSearchIdx = (currentSearchIdx - 1 + searchHitNodes.length) % searchHitNodes.length;
+    highlightCurrentSearch();
+    updateSearchInfo();
+  }
+
+  function updateSearchInfo() {
+    if (searchHitNodes.length === 0) {
+      inReaderSearchInfo.textContent = '0 / 0';
+    } else {
+      inReaderSearchInfo.textContent = (currentSearchIdx + 1) + ' / ' + searchHitNodes.length;
+    }
+  }
+
+  function updateSearchNavButtons() {
+    const disabled = searchHitNodes.length === 0;
+    btnSearchPrev.disabled = disabled;
+    btnSearchNext.disabled = disabled;
+  }
 
   // ───────────────────────────────────────
   // 책갈피
