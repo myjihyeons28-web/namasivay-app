@@ -1,0 +1,59 @@
+// ────────────────────────────────────────────
+// 나마 시바이 — 서비스 워커
+// 한 한결같은 오프라인 사용을 위함
+// ────────────────────────────────────────────
+
+const CACHE_NAME = 'namasivaya-v1';
+const ASSETS = [
+  './',
+  './index.html',
+  './styles.css',
+  './app.js',
+  './sutras-data.js',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-512-maskable.png',
+];
+
+// 설치 — 모든 자료를 한결같이 캐시
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(ASSETS))
+      .then(() => self.skipWaiting())
+  );
+});
+
+// 활성화 — 옛 캐시를 한결같이 정리
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
+    )).then(() => self.clients.claim())
+  );
+});
+
+// 요청 시 — 캐시 먼저 응답, 없으면 네트워크
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      if (response) return response;
+      return fetch(event.request).then(response => {
+        // 응답이 정상이면 캐시에 한결같이 추가
+        if (response && response.status === 200 && response.type === 'basic') {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return response;
+      }).catch(() => {
+        // 네트워크가 없을 때 한 한결같은 응답
+        return caches.match('./index.html');
+      });
+    })
+  );
+});

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="나마 시바이">
+  <meta name="theme-color" content="#1a1410">
+  <title>나마 시바이</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600;700&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- 표지 화면 -->
+  <section id="screen-cover" class="screen screen-cover active">
+    <div class="cover-inner">
+      <div class="cover-ornament-top">❖ &nbsp; ❖ &nbsp; ❖</div>
+      <h1 class="cover-title">나마 시바이</h1>
+      <div class="cover-mantra">॥ नमः शिवाय ॥</div>
+      <p class="cover-subtitle">거룩한 다섯 음절의<br>풍성한 경전 모음</p>
+      <button id="btn-enter" class="btn-enter">경전 목록 펴기</button>
+      <div class="cover-ornament-bottom">❖ &nbsp; ❖ &nbsp; ❖</div>
+    </div>
+  </section>
+
+  <!-- 경전 목록 화면 -->
+  <section id="screen-list" class="screen screen-list">
+    <header class="list-header">
+      <button id="btn-back-to-cover" class="btn-icon" aria-label="표지로">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M3 13h18v-2H3v2z M10 5l-7 7 7 7V5z"/></svg>
+      </button>
+      <h2 class="list-title">경전 모음</h2>
+      <div class="list-header-spacer"></div>
+    </header>
+    <div class="list-content" id="list-content"></div>
+  </section>
+
+  <!-- 경전 읽기 화면 -->
+  <section id="screen-reader" class="screen screen-reader">
+    <header class="reader-header">
+      <button id="btn-back-to-list" class="btn-icon" aria-label="목록으로">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M3 13h18v-2H3v2z M10 5l-7 7 7 7V5z"/></svg>
+      </button>
+      <h2 class="reader-title" id="reader-title"></h2>
+      <button id="btn-font-size" class="btn-icon" aria-label="글씨 크기">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M9 4v3h5v12h3V7h5V4H9zm-6 8h3v7h3v-7h3V9H3v3z"/></svg>
+      </button>
+    </header>
+    <div class="reader-content" id="reader-content"></div>
+    <button id="btn-scroll-top" class="btn-scroll-top" aria-label="맨 위로">
+      <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
+    </button>
+  </section>
+
+  <!-- 글씨 크기 설정 메뉴 -->
+  <div id="font-menu" class="font-menu">
+    <div class="font-menu-inner">
+      <div class="font-menu-title">글씨 크기</div>
+      <div class="font-menu-buttons">
+        <button data-size="small">작게</button>
+        <button data-size="medium" class="active">보통</button>
+        <button data-size="large">크게</button>
+        <button data-size="xlarge">아주 크게</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="sutras-data.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // Service Worker 등록
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW reg failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

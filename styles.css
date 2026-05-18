@@ -1,0 +1,580 @@
+/* ─────────────────────────────────────────────
+   나마 시바이 — 거룩한 다섯 음절 경전 모음
+   디자인: 고급스러운 금빛 표지 + 베이지 종이 본문
+   ───────────────────────────────────────────── */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  background: #0a0807;
+  color: #2a1f15;
+}
+
+/* ─── 화면 공통 ─── */
+.screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  transition: opacity 0.4s ease;
+}
+
+.screen.active {
+  display: flex;
+  opacity: 1;
+  z-index: 10;
+}
+
+.screen.fading-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ──────────────────────────────────────────
+   표지 화면 — 고급스러운 금빛
+   ────────────────────────────────────────── */
+.screen-cover {
+  background:
+    radial-gradient(ellipse at center top, rgba(212, 175, 100, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at center bottom, rgba(180, 135, 70, 0.12) 0%, transparent 60%),
+    linear-gradient(180deg, #1a1410 0%, #0d0906 50%, #1a1410 100%);
+  color: #d4af64;
+  position: relative;
+}
+
+.screen-cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 15% 25%, rgba(212, 175, 100, 0.05) 0%, transparent 2%),
+    radial-gradient(circle at 85% 75%, rgba(212, 175, 100, 0.05) 0%, transparent 2%),
+    radial-gradient(circle at 50% 50%, rgba(212, 175, 100, 0.03) 0%, transparent 3%);
+  background-size: 100px 100px, 150px 150px, 80px 80px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.screen-cover::after {
+  content: '';
+  position: absolute;
+  inset: 24px;
+  border: 1px solid rgba(212, 175, 100, 0.25);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.cover-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 40px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.cover-ornament-top,
+.cover-ornament-bottom {
+  font-size: 16px;
+  letter-spacing: 4px;
+  color: rgba(212, 175, 100, 0.55);
+  margin: 30px 0;
+}
+
+.cover-title {
+  font-family: 'Nanum Myeongjo', 'Noto Serif KR', serif;
+  font-size: 64px;
+  font-weight: 800;
+  letter-spacing: 8px;
+  margin: 20px 0 30px 0;
+  color: transparent;
+  background: linear-gradient(180deg, #f4d589 0%, #d4af64 40%, #a07c3a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(212, 175, 100, 0.25);
+}
+
+.cover-mantra {
+  font-size: 24px;
+  color: rgba(244, 213, 137, 0.85);
+  letter-spacing: 2px;
+  margin-bottom: 50px;
+  font-family: serif;
+}
+
+.cover-subtitle {
+  font-size: 16px;
+  line-height: 1.8;
+  color: rgba(212, 175, 100, 0.75);
+  letter-spacing: 2px;
+  margin-bottom: 60px;
+  font-weight: 300;
+}
+
+.btn-enter {
+  background: linear-gradient(180deg, rgba(212, 175, 100, 0.15) 0%, rgba(180, 135, 70, 0.1) 100%);
+  color: #f4d589;
+  border: 1px solid rgba(212, 175, 100, 0.5);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 6px;
+  padding: 16px 36px;
+  cursor: pointer;
+  border-radius: 1px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-enter::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(212, 175, 100, 0.2);
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.btn-enter:active {
+  background: linear-gradient(180deg, rgba(212, 175, 100, 0.3) 0%, rgba(180, 135, 70, 0.2) 100%);
+  color: #fff;
+}
+
+/* ──────────────────────────────────────────
+   경전 목록 화면 — 어두운 금빛 배경
+   ────────────────────────────────────────── */
+.screen-list {
+  background:
+    radial-gradient(ellipse at center top, rgba(212, 175, 100, 0.08) 0%, transparent 60%),
+    linear-gradient(180deg, #1a1410 0%, #0d0906 100%);
+  color: #d4af64;
+}
+
+.list-header {
+  display: flex;
+  align-items: center;
+  padding: env(safe-area-inset-top, 16px) 20px 16px 20px;
+  padding-top: calc(env(safe-area-inset-top, 16px) + 16px);
+  border-bottom: 1px solid rgba(212, 175, 100, 0.2);
+  background: rgba(13, 9, 6, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.list-title {
+  flex: 1;
+  text-align: center;
+  font-family: 'Nanum Myeongjo', serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  color: #d4af64;
+}
+
+.list-header-spacer {
+  width: 44px;
+}
+
+.btn-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #d4af64;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.btn-icon:active {
+  background: rgba(212, 175, 100, 0.15);
+}
+
+.list-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 16px 40px 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.list-category {
+  font-family: 'Nanum Myeongjo', serif;
+  font-size: 13px;
+  letter-spacing: 5px;
+  color: rgba(212, 175, 100, 0.55);
+  text-align: center;
+  margin: 28px 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(212, 175, 100, 0.15);
+}
+
+.list-category:first-child {
+  margin-top: 12px;
+}
+
+.list-item {
+  background: linear-gradient(180deg, rgba(212, 175, 100, 0.06) 0%, rgba(180, 135, 70, 0.04) 100%);
+  border: 1px solid rgba(212, 175, 100, 0.25);
+  border-radius: 4px;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.list-item::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 1px solid rgba(212, 175, 100, 0.08);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.list-item:active {
+  background: linear-gradient(180deg, rgba(212, 175, 100, 0.15) 0%, rgba(180, 135, 70, 0.1) 100%);
+  border-color: rgba(212, 175, 100, 0.5);
+}
+
+.list-item-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: #f4d589;
+  line-height: 1.4;
+  letter-spacing: 1px;
+}
+
+.list-item-subtitle {
+  font-size: 13px;
+  color: rgba(212, 175, 100, 0.65);
+  margin-top: 6px;
+  letter-spacing: 1px;
+}
+
+/* ──────────────────────────────────────────
+   경전 읽기 화면 — 베이지 종이 질감
+   ────────────────────────────────────────── */
+.screen-reader {
+  background: #f5ead2;
+}
+
+.reader-header {
+  display: flex;
+  align-items: center;
+  padding: env(safe-area-inset-top, 16px) 12px 14px 12px;
+  padding-top: calc(env(safe-area-inset-top, 16px) + 14px);
+  background: linear-gradient(180deg, #1a1410 0%, #0d0906 100%);
+  border-bottom: 1px solid rgba(212, 175, 100, 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.reader-header .btn-icon {
+  color: #d4af64;
+}
+
+.reader-title {
+  flex: 1;
+  text-align: center;
+  font-family: 'Nanum Myeongjo', serif;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  color: #d4af64;
+  padding: 0 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.reader-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 32px 24px 60px 24px;
+  -webkit-overflow-scrolling: touch;
+  background:
+    /* 한결같은 종이 질감 */
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(180, 135, 70, 0.015) 2px,
+      rgba(180, 135, 70, 0.015) 3px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(180, 135, 70, 0.015) 2px,
+      rgba(180, 135, 70, 0.015) 3px
+    ),
+    radial-gradient(circle at 20% 30%, rgba(212, 175, 100, 0.04) 0%, transparent 30%),
+    radial-gradient(circle at 70% 70%, rgba(180, 135, 70, 0.04) 0%, transparent 30%),
+    radial-gradient(circle at 50% 50%, rgba(244, 213, 137, 0.05) 0%, transparent 50%),
+    linear-gradient(135deg, #f5ead2 0%, #efe1bf 50%, #f5ead2 100%);
+  color: #2a1f15;
+}
+
+.reader-content h2.chapter {
+  font-family: 'Nanum Myeongjo', serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #4a2f15;
+  margin: 36px 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(180, 135, 70, 0.4);
+  letter-spacing: 1px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.reader-content h2.chapter:first-child {
+  margin-top: 0;
+}
+
+.reader-content h3.subhead {
+  font-family: 'Nanum Myeongjo', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #5a3b1a;
+  margin: 28px 0 14px 0;
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+}
+
+.reader-content p {
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: var(--reader-font-size, 17px);
+  line-height: 2.0;
+  color: #2a1f15;
+  margin: 0 0 18px 0;
+  text-align: justify;
+  text-justify: inter-character;
+  word-break: keep-all;
+  text-indent: 0.5em;
+  letter-spacing: 0.2px;
+}
+
+.reader-content p.commentary {
+  font-style: italic;
+  color: #5a3b1a;
+  background: rgba(212, 175, 100, 0.1);
+  padding: 14px 18px;
+  border-left: 3px solid rgba(180, 135, 70, 0.55);
+  margin: 14px 0 22px 0;
+  border-radius: 0 4px 4px 0;
+  text-indent: 0;
+  font-size: calc(var(--reader-font-size, 17px) - 1px);
+  line-height: 1.85;
+}
+
+.reader-content em {
+  font-style: italic;
+  color: #5a3b1a;
+}
+
+.reader-content strong {
+  font-weight: 700;
+  color: #4a2f15;
+}
+
+.reader-content .sanskrit {
+  font-family: 'Noto Serif KR', serif;
+  text-align: center;
+  font-size: calc(var(--reader-font-size, 17px) + 1px);
+  color: #6b4423;
+  margin: 22px 0;
+  letter-spacing: 1px;
+  font-weight: 500;
+}
+
+.reader-content .separator {
+  text-align: center;
+  font-size: 16px;
+  letter-spacing: 4px;
+  color: rgba(180, 135, 70, 0.65);
+  margin: 32px 0;
+  font-weight: 400;
+}
+
+/* 글씨 크기 설정 */
+.reader-content.font-small { --reader-font-size: 15px; }
+.reader-content.font-medium { --reader-font-size: 17px; }
+.reader-content.font-large { --reader-font-size: 19px; }
+.reader-content.font-xlarge { --reader-font-size: 21px; }
+
+/* 위로 가는 버튼 */
+.btn-scroll-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #4a2f15 0%, #2a1f15 100%);
+  color: #d4af64;
+  border: 1px solid rgba(212, 175, 100, 0.4);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-scroll-top.visible {
+  display: flex;
+}
+
+.btn-scroll-top:active {
+  transform: scale(0.95);
+}
+
+/* ──────────────────────────────────────────
+   글씨 크기 설정 메뉴
+   ────────────────────────────────────────── */
+.font-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+.font-menu.active {
+  display: flex;
+}
+
+.font-menu-inner {
+  background: linear-gradient(180deg, #1a1410 0%, #0d0906 100%);
+  border: 1px solid rgba(212, 175, 100, 0.4);
+  border-radius: 8px;
+  padding: 30px;
+  max-width: 320px;
+  width: 100%;
+  position: relative;
+}
+
+.font-menu-inner::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(212, 175, 100, 0.15);
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.font-menu-title {
+  font-family: 'Nanum Myeongjo', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #d4af64;
+  text-align: center;
+  letter-spacing: 4px;
+  margin-bottom: 20px;
+}
+
+.font-menu-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.font-menu-buttons button {
+  background: transparent;
+  color: rgba(212, 175, 100, 0.85);
+  border: 1px solid rgba(212, 175, 100, 0.3);
+  font-family: inherit;
+  font-size: 15px;
+  padding: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  letter-spacing: 2px;
+  transition: all 0.2s ease;
+}
+
+.font-menu-buttons button.active {
+  background: rgba(212, 175, 100, 0.15);
+  color: #f4d589;
+  border-color: rgba(212, 175, 100, 0.6);
+}
+
+.font-menu-buttons button:active {
+  background: rgba(212, 175, 100, 0.25);
+}
+
+/* ──────────────────────────────────────────
+   반응형 — 큰 화면 (아이패드/태블릿)
+   ────────────────────────────────────────── */
+@media (min-width: 768px) {
+  .cover-title {
+    font-size: 80px;
+  }
+  .cover-mantra {
+    font-size: 30px;
+  }
+  .reader-content {
+    padding: 40px 60px 60px 60px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .list-content {
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+/* iOS Safari 추가 보정 */
+@supports (-webkit-touch-callout: none) {
+  .reader-content {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  }
+  .btn-scroll-top {
+    bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+}
