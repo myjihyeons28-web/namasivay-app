@@ -755,6 +755,42 @@ body {
   font-weight: 400;
 }
 
+/* 표 — 마크다운 표를 옮긴 자리 */
+.reader-content table.md-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 22px 0;
+  font-size: calc(var(--reader-font-size, 17px) * 0.88);
+  font-family: var(--reader-font-family, 'Gyeonggi Batang', 'Noto Serif KR', serif);
+  table-layout: fixed;
+}
+
+.reader-content table.md-table th,
+.reader-content table.md-table td {
+  border: 1px solid var(--reader-chapter-border, rgba(180, 135, 70, 0.4));
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.65;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.reader-content table.md-table th {
+  background: var(--reader-commentary-bg, rgba(212, 175, 100, 0.15));
+  color: var(--reader-chapter-color, #4a2f15);
+  font-weight: 700;
+  text-align: center;
+}
+
+.reader-content table.md-table td {
+  color: var(--reader-text-color, #2a1f15);
+}
+
+.reader-content table.md-table tr:nth-child(even) td {
+  background: rgba(0, 0, 0, 0.02);
+}
+
 /* 검색 강조 표시 */
 .reader-content mark.search-hit {
   background: var(--reader-search-highlight, rgba(244, 175, 80, 0.45));
