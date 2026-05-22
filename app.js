@@ -687,9 +687,15 @@
   // 마지막에 보던 경전이 있으면 자동으로 그 자리에서 이어 펴기
   // (iOS가 백그라운드에서 앱을 닫아도 보던 경전과 자리를 잃지 않도록)
   (function restoreLastSutra() {
-    const lastId = localStorage.getItem('last_sutra');
-    if (lastId && SUTRAS_DATA.find(s => s.id === lastId)) {
-      openSutra(lastId);
+    try {
+      const lastId = localStorage.getItem('last_sutra');
+      if (lastId && SUTRAS_DATA.find(s => s.id === lastId)) {
+        // 표지 화면을 먼저 내리고 곧장 그 경전을 편다
+        screenCover.classList.remove('active');
+        openSutra(lastId);
+      }
+    } catch (e) {
+      console.error('이어 보기 복원 실패:', e);
     }
   })();
 
