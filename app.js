@@ -106,7 +106,11 @@
 
   btnEnter.addEventListener('click', () => showScreen(screenList));
   btnBackToCover.addEventListener('click', () => showScreen(screenCover));
-  btnBackToList.addEventListener('click', () => showScreen(screenList));
+  btnBackToList.addEventListener('click', () => {
+    localStorage.removeItem('last_sutra');
+    currentSutraId = null;
+    showScreen(screenList);
+  });
 
   // ── HTML 이스케이프 ──
   function escapeHtml(s) {
@@ -164,6 +168,7 @@
     readerContent.innerHTML = sutra.html;
     applySettings();
     currentSutraId = id;
+    localStorage.setItem('last_sutra', id);
     updateBookmarkToggleButton();
     closeInReaderSearch();
 
@@ -205,6 +210,21 @@
     clearTimeout(progressUpdateTimer);
     progressUpdateTimer = setTimeout(updateProgressBar, 10);
   });
+
+  // 앱이 가려지거나(백그라운드) 닫히기 직전, 보던 자리를 즉시 저장한다.
+  // iOS가 백그라운드에서 앱을 종료해도 마지막 자리를 잃지 않도록 함.
+  function saveCurrentPositionNow() {
+    if (currentSutraId) {
+      localStorage.setItem('scroll_' + currentSutraId, readerContent.scrollTop);
+      localStorage.setItem('last_sutra', currentSutraId);
+    }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      saveCurrentPositionNow();
+    }
+  });
+  window.addEventListener('pagehide', saveCurrentPositionNow);
 
   btnScrollTop.addEventListener('click', () => {
     readerContent.scrollTo({ top: 0, behavior: 'smooth' });
@@ -663,6 +683,15 @@
   buildList();
   applySettings();
   updateBookmarkIndicator();
+
+  // 마지막에 보던 경전이 있으면 자동으로 그 자리에서 이어 펴기
+  // (iOS가 백그라운드에서 앱을 닫아도 보던 경전과 자리를 잃지 않도록)
+  (function restoreLastSutra() {
+    const lastId = localStorage.getItem('last_sutra');
+    if (lastId && SUTRAS_DATA.find(s => s.id === lastId)) {
+      openSutra(lastId);
+    }
+  })();
 
   // ───────────────────────────────────────
   // 목차
