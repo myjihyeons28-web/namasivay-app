@@ -1,6 +1,6 @@
-// 나마 시바이 — 서비스 워커 (오프라인 사용)
+// 나마 쉬바야 — 서비스 워커 (오프라인 사용)
 
-const CACHE_NAME = 'namasivaya-v44';
+const CACHE_NAME = 'namasivaya-v45';
 const ASSETS = [
   './',
   './index.html',
