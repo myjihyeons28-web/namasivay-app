@@ -73,6 +73,9 @@
       <button id="btn-toggle-bookmark" class="btn-icon" aria-label="책갈피 추가/제거">
         <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
       </button>
+      <button id="btn-tts" class="btn-icon" aria-label="소리내어 읽기">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+      </button>
       <button id="btn-reader-settings" class="btn-icon" aria-label="읽기 설정">
         <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M9 4v3h5v12h3V7h5V4H9zm-6 8h3v7h3v-7h3V9H3v3z"/></svg>
       </button>
@@ -104,6 +107,38 @@
     </div>
 
     <div class="reader-content" id="reader-content"></div>
+
+    <!-- 소리내어 읽기 조작 바 -->
+    <div id="tts-bar" class="tts-bar">
+      <div class="tts-bar-main">
+        <button id="tts-prev" class="tts-btn" aria-label="이전 구절">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <button id="tts-play" class="tts-btn tts-btn-main" aria-label="읽기/멈춤">
+          <svg id="tts-icon-play" viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+          <svg id="tts-icon-pause" viewBox="0 0 24 24" width="26" height="26" style="display:none"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+        <button id="tts-next" class="tts-btn" aria-label="다음 구절">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+        </button>
+        <div class="tts-status" id="tts-status">읽을 준비가 되었습니다</div>
+        <button id="tts-close" class="tts-btn" aria-label="닫기">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+      <div class="tts-bar-opts">
+        <label class="tts-opt">
+          <span>목소리</span>
+          <select id="tts-voice" class="tts-select"></select>
+        </label>
+        <label class="tts-opt tts-opt-rate">
+          <span>속도 <b id="tts-rate-val">1.0</b></span>
+          <input type="range" id="tts-rate" class="tts-range" min="0.5" max="1.6" step="0.05" value="1">
+        </label>
+      </div>
+      <div class="tts-hint" id="tts-hint"></div>
+    </div>
+
     <button id="btn-scroll-top" class="btn-scroll-top" aria-label="맨 위로">
       <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
     </button>

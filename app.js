@@ -761,4 +761,245 @@
     });
   }
 
+
+  // ═══════════════════════════════════════════
+  //  소리내어 읽기 (TTS)
+  // ═══════════════════════════════════════════
+  (function initTTS() {
+    if (!('speechSynthesis' in window)) return;
+
+    const synth = window.speechSynthesis;
+    const bar        = document.getElementById('tts-bar');
+    const btnOpen    = document.getElementById('btn-tts');
+    const btnPlay    = document.getElementById('tts-play');
+    const btnPrev    = document.getElementById('tts-prev');
+    const btnNext    = document.getElementById('tts-next');
+    const btnClose   = document.getElementById('tts-close');
+    const iconPlay   = document.getElementById('tts-icon-play');
+    const iconPause  = document.getElementById('tts-icon-pause');
+    const statusEl   = document.getElementById('tts-status');
+    const voiceSel   = document.getElementById('tts-voice');
+    const rateInput  = document.getElementById('tts-rate');
+    const rateVal    = document.getElementById('tts-rate-val');
+    const hintEl     = document.getElementById('tts-hint');
+    const readerEl   = document.getElementById('reader-content');
+    const scrollTop  = document.getElementById('btn-scroll-top');
+    if (!bar || !btnOpen || !readerEl) return;
+
+    let blocks = [];      // 읽을 조각들 {el, text}
+    let idx = -1;         // 현재 조각
+    let playing = false;
+    let voices = [];
+    let chosenVoice = null;
+    let stopping = false;
+
+    const PREF_VOICE = 'tts-voice-name';
+    const PREF_RATE  = 'tts-rate';
+
+    // ── 읽을 조각 모으기 ──
+    function collectBlocks() {
+      blocks = [];
+      const nodes = readerEl.querySelectorAll('p, h1, h2, h3, h4, li, blockquote');
+      nodes.forEach(el => {
+        const t = (el.textContent || '').replace(/\s+/g, ' ').trim();
+        if (t.length < 2) return;
+        blocks.push({ el: el, text: t });
+      });
+      if (!blocks.length) {
+        const t = (readerEl.textContent || '').replace(/\s+/g, ' ').trim();
+        if (t) blocks.push({ el: readerEl, text: t });
+      }
+    }
+
+    // ── 목소리 목록 ──
+    function isKorean(v) {
+      return /^ko/i.test(v.lang || '') || /korean|한국/i.test(v.name || '');
+    }
+    function voiceScore(v) {
+      const n = (v.name || '').toLowerCase();
+      let s = 0;
+      if (/premium|프리미엄/.test(n)) s += 40;
+      if (/enhanced|고급/.test(n))    s += 30;
+      if (/neural|natural/.test(n))   s += 25;
+      if (/siri/.test(n))             s += 20;
+      if (v.localService)             s += 5;
+      return s;
+    }
+    function loadVoices() {
+      const all = synth.getVoices() || [];
+      voices = all.filter(isKorean).sort((a, b) => voiceScore(b) - voiceScore(a));
+      if (!voices.length) voices = all.slice(0, 12);
+      voiceSel.innerHTML = '';
+      voices.forEach((v, i) => {
+        const o = document.createElement('option');
+        o.value = i;
+        let label = v.name;
+        const sc = voiceScore(v);
+        if (sc >= 30) label += ' ★';
+        o.textContent = label;
+        voiceSel.appendChild(o);
+      });
+      const saved = localStorage.getItem(PREF_VOICE);
+      let pick = 0;
+      if (saved) {
+        const f = voices.findIndex(v => v.name === saved);
+        if (f >= 0) pick = f;
+      }
+      voiceSel.value = pick;
+      chosenVoice = voices[pick] || null;
+      showHint();
+    }
+    function showHint() {
+      const best = voices.length ? voiceScore(voices[0]) : 0;
+      if (best < 30) {
+        hintEl.innerHTML = '더 자연스러운 목소리를 원하시면 — <b>설정 → 손쉬운 사용 → 콘텐츠 말하기 → 음성 → 한국어</b>에서 ' +
+                           '<b>고급</b> 또는 <b>프리미엄</b> 음성을 내려받으신 뒤 앱을 다시 여시면 목록에 나타납니다.';
+        hintEl.classList.add('show');
+      } else {
+        hintEl.classList.remove('show');
+      }
+    }
+    synth.addEventListener ? synth.addEventListener('voiceschanged', loadVoices)
+                           : (synth.onvoiceschanged = loadVoices);
+    loadVoices();
+    setTimeout(loadVoices, 400);
+    setTimeout(loadVoices, 1200);
+
+    // ── 표시 ──
+    function clearMark() {
+      readerEl.querySelectorAll('.tts-reading').forEach(e => e.classList.remove('tts-reading'));
+    }
+    function mark(i) {
+      clearMark();
+      const b = blocks[i];
+      if (!b || !b.el || b.el === readerEl) return;
+      b.el.classList.add('tts-reading');
+      const r = b.el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      if (r.top < 90 || r.bottom > vh - 190) {
+        b.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+    function setPlayIcon(on) {
+      iconPlay.style.display  = on ? 'none' : '';
+      iconPause.style.display = on ? '' : 'none';
+    }
+    function status(msg) { statusEl.textContent = msg; }
+
+    // ── 재생 ──
+    function speakAt(i) {
+      if (i < 0 || i >= blocks.length) { finish(); return; }
+      idx = i;
+      mark(i);
+      status((i + 1) + ' / ' + blocks.length + '  ·  ' + blocks[i].text.slice(0, 40));
+
+      const u = new SpeechSynthesisUtterance(blocks[i].text);
+      if (chosenVoice) { u.voice = chosenVoice; u.lang = chosenVoice.lang || 'ko-KR'; }
+      else u.lang = 'ko-KR';
+      u.rate = parseFloat(rateInput.value) || 1;
+      u.pitch = 1;
+      u.onend = function () {
+        if (stopping) return;
+        if (idx + 1 < blocks.length) speakAt(idx + 1);
+        else finish();
+      };
+      u.onerror = function () {
+        if (stopping) return;
+        if (idx + 1 < blocks.length) setTimeout(() => speakAt(idx + 1), 120);
+        else finish();
+      };
+      synth.speak(u);
+    }
+    function finish() {
+      playing = false; stopping = false;
+      setPlayIcon(false);
+      clearMark();
+      status('다 읽었습니다');
+    }
+    function hardStop() {
+      stopping = true;
+      try { synth.cancel(); } catch (e) {}
+      setTimeout(() => { stopping = false; }, 60);
+    }
+    function start(from) {
+      collectBlocks();
+      if (!blocks.length) { status('읽을 내용이 없습니다'); return; }
+      hardStop();
+      playing = true;
+      setPlayIcon(true);
+      setTimeout(() => speakAt(typeof from === 'number' ? from : Math.max(0, idx)), 90);
+    }
+    function pause() {
+      playing = false;
+      setPlayIcon(false);
+      hardStop();
+      status('멈추었습니다  ·  다시 누르면 이 자리에서 이어집니다');
+    }
+
+    // ── 조작 ──
+    btnPlay.addEventListener('click', () => {
+      if (playing) pause();
+      else start(idx < 0 ? 0 : idx);
+    });
+    btnPrev.addEventListener('click', () => {
+      const t = Math.max(0, (idx < 0 ? 0 : idx) - 1);
+      if (playing) { hardStop(); setTimeout(() => speakAt(t), 90); }
+      else { idx = t; mark(t); status((t + 1) + ' / ' + blocks.length); }
+    });
+    btnNext.addEventListener('click', () => {
+      if (!blocks.length) collectBlocks();
+      const t = Math.min(blocks.length - 1, (idx < 0 ? 0 : idx) + 1);
+      if (playing) { hardStop(); setTimeout(() => speakAt(t), 90); }
+      else { idx = t; mark(t); status((t + 1) + ' / ' + blocks.length); }
+    });
+    voiceSel.addEventListener('change', () => {
+      chosenVoice = voices[parseInt(voiceSel.value)] || null;
+      if (chosenVoice) localStorage.setItem(PREF_VOICE, chosenVoice.name);
+      if (playing) { hardStop(); setTimeout(() => speakAt(idx), 100); }
+    });
+    rateInput.addEventListener('input', () => {
+      rateVal.textContent = parseFloat(rateInput.value).toFixed(2).replace(/0$/, '');
+      localStorage.setItem(PREF_RATE, rateInput.value);
+    });
+    rateInput.addEventListener('change', () => {
+      if (playing) { hardStop(); setTimeout(() => speakAt(idx), 100); }
+    });
+    const savedRate = localStorage.getItem(PREF_RATE);
+    if (savedRate) { rateInput.value = savedRate; }
+    rateVal.textContent = parseFloat(rateInput.value).toFixed(2).replace(/0$/, '');
+
+    // ── 열고 닫기 ──
+    function openBar() {
+      collectBlocks();
+      loadVoices();
+      bar.classList.add('open');
+      readerEl.classList.add('tts-open');
+      if (scrollTop) scrollTop.classList.add('tts-open');
+      if (idx < 0) status('읽을 준비가 되었습니다  ·  ' + blocks.length + '구절');
+    }
+    function closeBar() {
+      hardStop();
+      playing = false; idx = -1;
+      setPlayIcon(false);
+      clearMark();
+      bar.classList.remove('open');
+      readerEl.classList.remove('tts-open');
+      if (scrollTop) scrollTop.classList.remove('tts-open');
+    }
+    btnOpen.addEventListener('click', () => {
+      if (bar.classList.contains('open')) closeBar();
+      else openBar();
+    });
+    btnClose.addEventListener('click', closeBar);
+
+    // 다른 경전으로 옮기거나 화면을 벗어나면 정지
+    const backBtn = document.getElementById('btn-back-to-list');
+    if (backBtn) backBtn.addEventListener('click', closeBar);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && playing) pause();
+    });
+    window.addEventListener('beforeunload', () => { try { synth.cancel(); } catch (e) {} });
+  })();
+
+
 })();
