@@ -1256,3 +1256,19 @@ body {
 /* 조작 바가 열렸을 때 본문이 가리지 않도록 */
 .reader-content.tts-open { padding-bottom: 172px; }
 .btn-scroll-top.tts-open { bottom: 178px; }
+
+.tts-bar-opts-sub { margin-top: 9px; justify-content: space-between; }
+.tts-check {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; color: #8d7a63; cursor: pointer;
+}
+.tts-check input { accent-color: #d4af64; width: 15px; height: 15px; }
+.tts-reset {
+  background: #241a10; color: #b09a78;
+  border: 1px solid #4a3a26; border-radius: 7px;
+  padding: 5px 12px; font-size: 12px;
+  font-family: inherit; cursor: pointer;
+}
+.tts-reset:active { background: #3a2a18; color: #d4af64; }
+.reader-content.tts-open { padding-bottom: 240px; }
+.btn-scroll-top.tts-open { bottom: 246px; }

@@ -136,6 +136,23 @@
           <input type="range" id="tts-rate" class="tts-range" min="0.5" max="1.6" step="0.05" value="1">
         </label>
       </div>
+      <div class="tts-bar-opts">
+        <label class="tts-opt tts-opt-rate">
+          <span>음높이 <b id="tts-pitch-val">1.0</b></span>
+          <input type="range" id="tts-pitch" class="tts-range" min="0.5" max="1.5" step="0.05" value="1">
+        </label>
+        <label class="tts-opt tts-opt-rate">
+          <span>구절 쉼 <b id="tts-gap-val">0.4초</b></span>
+          <input type="range" id="tts-gap" class="tts-range" min="0" max="2000" step="100" value="400">
+        </label>
+      </div>
+      <div class="tts-bar-opts tts-bar-opts-sub">
+        <label class="tts-check">
+          <input type="checkbox" id="tts-allvoices">
+          <span>모든 목소리 보기</span>
+        </label>
+        <button id="tts-reset" class="tts-reset">기본값</button>
+      </div>
       <div class="tts-hint" id="tts-hint"></div>
     </div>
 

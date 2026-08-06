@@ -764,6 +764,7 @@
 
   // ═══════════════════════════════════════════
   //  소리내어 읽기 (TTS)
+  //  ※ 본문은 조금도 바꾸지 않고 있는 그대로 읽습니다
   // ═══════════════════════════════════════════
   (function initTTS() {
     if (!('speechSynthesis' in window)) return;
@@ -781,26 +782,31 @@
     const voiceSel   = document.getElementById('tts-voice');
     const rateInput  = document.getElementById('tts-rate');
     const rateVal    = document.getElementById('tts-rate-val');
+    const pitchInput = document.getElementById('tts-pitch');
+    const pitchVal   = document.getElementById('tts-pitch-val');
+    const gapInput   = document.getElementById('tts-gap');
+    const gapVal     = document.getElementById('tts-gap-val');
+    const allChk     = document.getElementById('tts-allvoices');
+    const btnReset   = document.getElementById('tts-reset');
     const hintEl     = document.getElementById('tts-hint');
     const readerEl   = document.getElementById('reader-content');
     const scrollTop  = document.getElementById('btn-scroll-top');
     if (!bar || !btnOpen || !readerEl) return;
 
-    let blocks = [];      // 읽을 조각들 {el, text}
-    let idx = -1;         // 현재 조각
+    let blocks = [];
+    let idx = -1;
     let playing = false;
     let voices = [];
     let chosenVoice = null;
     let stopping = false;
 
-    const PREF_VOICE = 'tts-voice-name';
-    const PREF_RATE  = 'tts-rate';
+    const P_VOICE = 'tts-voice-name', P_RATE = 'tts-rate',
+          P_PITCH = 'tts-pitch', P_GAP = 'tts-gap', P_ALL = 'tts-allvoices';
 
-    // ── 읽을 조각 모으기 ──
+    // ── 읽을 조각 모으기 (본문 그대로) ──
     function collectBlocks() {
       blocks = [];
-      const nodes = readerEl.querySelectorAll('p, h1, h2, h3, h4, li, blockquote');
-      nodes.forEach(el => {
+      readerEl.querySelectorAll('p, h1, h2, h3, h4, li, blockquote').forEach(el => {
         const t = (el.textContent || '').replace(/\s+/g, ' ').trim();
         if (t.length < 2) return;
         blocks.push({ el: el, text: t });
@@ -811,194 +817,180 @@
       }
     }
 
-    // ── 목소리 목록 ──
-    function isKorean(v) {
-      return /^ko/i.test(v.lang || '') || /korean|한국/i.test(v.name || '');
+    // ── 긴 문단은 문장 자리에서 나누어 숨을 주되, 글자는 그대로 ──
+    function splitForBreath(t) {
+      if (t.length <= 110) return [t];
+      const out = []; let buf = '';
+      for (let i = 0; i < t.length; i++) {
+        buf += t[i];
+        if (/[.!?]/.test(t[i]) && (i + 1 >= t.length || /\s/.test(t[i + 1]))) {
+          const v = buf.trim(); if (v) out.push(v); buf = '';
+        }
+      }
+      const rest = buf.trim(); if (rest) out.push(rest);
+      const merged = [];
+      out.forEach(s => {
+        if (merged.length && merged[merged.length - 1].length + s.length < 45)
+          merged[merged.length - 1] += ' ' + s;
+        else merged.push(s);
+      });
+      return merged.length ? merged : [t];
     }
-    function voiceScore(v) {
-      const n = (v.name || '').toLowerCase();
-      let s = 0;
+
+    // ── 목소리 ──
+    function isKorean(v) { return /^ko/i.test(v.lang || '') || /korean|한국/i.test(v.name || ''); }
+    function score(v) {
+      const n = (v.name || '').toLowerCase(); let s = 0;
       if (/premium|프리미엄/.test(n)) s += 40;
-      if (/enhanced|고급/.test(n))    s += 30;
-      if (/neural|natural/.test(n))   s += 25;
-      if (/siri/.test(n))             s += 20;
-      if (v.localService)             s += 5;
+      if (/enhanced|고급/.test(n)) s += 30;
+      if (/neural|natural|siri/.test(n)) s += 20;
+      if (v.localService) s += 5;
       return s;
     }
     function loadVoices() {
       const all = synth.getVoices() || [];
-      voices = all.filter(isKorean).sort((a, b) => voiceScore(b) - voiceScore(a));
-      if (!voices.length) voices = all.slice(0, 12);
+      const showAll = allChk && allChk.checked;
+      const ko = all.filter(isKorean).sort((a, b) => score(b) - score(a));
+      voices = showAll ? ko.concat(all.filter(v => !isKorean(v))) : ko;
+      if (!voices.length) voices = all.slice();
       voiceSel.innerHTML = '';
       voices.forEach((v, i) => {
         const o = document.createElement('option');
         o.value = i;
-        let label = v.name;
-        const sc = voiceScore(v);
-        if (sc >= 30) label += ' ★';
-        o.textContent = label;
+        o.textContent = v.name + (isKorean(v) ? '' : '  (' + (v.lang || '') + ')') + (score(v) >= 30 ? ' ★' : '');
         voiceSel.appendChild(o);
       });
-      const saved = localStorage.getItem(PREF_VOICE);
+      const saved = localStorage.getItem(P_VOICE);
       let pick = 0;
-      if (saved) {
-        const f = voices.findIndex(v => v.name === saved);
-        if (f >= 0) pick = f;
-      }
+      if (saved) { const f = voices.findIndex(v => v.name === saved); if (f >= 0) pick = f; }
       voiceSel.value = pick;
       chosenVoice = voices[pick] || null;
-      showHint();
+      updateHint(all.length, ko.length);
     }
-    function showHint() {
-      const best = voices.length ? voiceScore(voices[0]) : 0;
-      if (best < 30) {
-        hintEl.innerHTML = '더 자연스러운 목소리를 원하시면 — <b>설정 → 손쉬운 사용 → 콘텐츠 말하기 → 음성 → 한국어</b>에서 ' +
-                           '<b>고급</b> 또는 <b>프리미엄</b> 음성을 내려받으신 뒤 앱을 다시 여시면 목록에 나타납니다.';
-        hintEl.classList.add('show');
-      } else {
-        hintEl.classList.remove('show');
-      }
+    function updateHint(total, koCount) {
+      hintEl.innerHTML = '이 기기가 웹앱에 열어 주는 목소리는 <b>' + koCount + '개</b>입니다 (전체 ' + total + '개). ' +
+        '아이폰은 <b>따로 내려받은 음성(민수 등)을 웹앱에 넘겨주지 않습니다.</b> ' +
+        '그 목소리로 들으시려면 — <b>설정 → 손쉬운 사용 → 콘텐츠 말하기 → 화면 말하기</b>를 켜신 뒤, ' +
+        '이 화면에서 위에서 두 손가락으로 쓸어내리십시오.';
+      hintEl.classList.add('show');
     }
-    synth.addEventListener ? synth.addEventListener('voiceschanged', loadVoices)
-                           : (synth.onvoiceschanged = loadVoices);
-    loadVoices();
-    setTimeout(loadVoices, 400);
-    setTimeout(loadVoices, 1200);
+    synth.addEventListener ? synth.addEventListener('voiceschanged', loadVoices) : (synth.onvoiceschanged = loadVoices);
+    loadVoices(); setTimeout(loadVoices, 400); setTimeout(loadVoices, 1200);
 
     // ── 표시 ──
-    function clearMark() {
-      readerEl.querySelectorAll('.tts-reading').forEach(e => e.classList.remove('tts-reading'));
-    }
+    function clearMark() { readerEl.querySelectorAll('.tts-reading').forEach(e => e.classList.remove('tts-reading')); }
     function mark(i) {
       clearMark();
-      const b = blocks[i];
-      if (!b || !b.el || b.el === readerEl) return;
+      const b = blocks[i]; if (!b || !b.el || b.el === readerEl) return;
       b.el.classList.add('tts-reading');
       const r = b.el.getBoundingClientRect();
-      const vh = window.innerHeight;
-      if (r.top < 90 || r.bottom > vh - 190) {
+      if (r.top < 90 || r.bottom > window.innerHeight - 250)
         b.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
     }
-    function setPlayIcon(on) {
-      iconPlay.style.display  = on ? 'none' : '';
-      iconPause.style.display = on ? '' : 'none';
-    }
-    function status(msg) { statusEl.textContent = msg; }
+    function setIcon(on) { iconPlay.style.display = on ? 'none' : ''; iconPause.style.display = on ? '' : 'none'; }
+    function status(m) { statusEl.textContent = m; }
 
     // ── 재생 ──
     function speakAt(i) {
       if (i < 0 || i >= blocks.length) { finish(); return; }
-      idx = i;
-      mark(i);
-      status((i + 1) + ' / ' + blocks.length + '  ·  ' + blocks[i].text.slice(0, 40));
-
-      const u = new SpeechSynthesisUtterance(blocks[i].text);
-      if (chosenVoice) { u.voice = chosenVoice; u.lang = chosenVoice.lang || 'ko-KR'; }
-      else u.lang = 'ko-KR';
-      u.rate = parseFloat(rateInput.value) || 1;
-      u.pitch = 1;
-      u.onend = function () {
+      idx = i; mark(i);
+      status((i + 1) + ' / ' + blocks.length + '  ·  ' + blocks[i].text.slice(0, 36));
+      const parts = splitForBreath(blocks[i].text);
+      let pi = 0;
+      (function nextPart() {
         if (stopping) return;
-        if (idx + 1 < blocks.length) speakAt(idx + 1);
-        else finish();
-      };
-      u.onerror = function () {
-        if (stopping) return;
-        if (idx + 1 < blocks.length) setTimeout(() => speakAt(idx + 1), 120);
-        else finish();
-      };
-      synth.speak(u);
+        if (pi >= parts.length) {
+          const gap = parseInt(gapInput.value) || 0;
+          setTimeout(function () {
+            if (stopping) return;
+            if (idx + 1 < blocks.length) speakAt(idx + 1); else finish();
+          }, gap);
+          return;
+        }
+        const u = new SpeechSynthesisUtterance(parts[pi++]);
+        if (chosenVoice) { u.voice = chosenVoice; u.lang = chosenVoice.lang || 'ko-KR'; }
+        else u.lang = 'ko-KR';
+        u.rate  = parseFloat(rateInput.value) || 1;
+        u.pitch = parseFloat(pitchInput.value) || 1;
+        u.onend = nextPart;
+        u.onerror = function () { if (!stopping) setTimeout(nextPart, 100); };
+        synth.speak(u);
+      })();
     }
-    function finish() {
-      playing = false; stopping = false;
-      setPlayIcon(false);
-      clearMark();
-      status('다 읽었습니다');
-    }
-    function hardStop() {
-      stopping = true;
-      try { synth.cancel(); } catch (e) {}
-      setTimeout(() => { stopping = false; }, 60);
-    }
+    function finish() { playing = false; stopping = false; setIcon(false); clearMark(); status('다 읽었습니다'); }
+    function hardStop() { stopping = true; try { synth.cancel(); } catch (e) {} setTimeout(function () { stopping = false; }, 60); }
     function start(from) {
       collectBlocks();
       if (!blocks.length) { status('읽을 내용이 없습니다'); return; }
-      hardStop();
-      playing = true;
-      setPlayIcon(true);
-      setTimeout(() => speakAt(typeof from === 'number' ? from : Math.max(0, idx)), 90);
+      hardStop(); playing = true; setIcon(true);
+      setTimeout(function () { speakAt(typeof from === 'number' ? from : Math.max(0, idx)); }, 90);
     }
-    function pause() {
-      playing = false;
-      setPlayIcon(false);
-      hardStop();
-      status('멈추었습니다  ·  다시 누르면 이 자리에서 이어집니다');
-    }
+    function pause() { playing = false; setIcon(false); hardStop(); status('멈추었습니다  ·  다시 누르면 이어집니다'); }
+    function restart() { if (playing) { hardStop(); setTimeout(function () { speakAt(idx); }, 110); } }
 
     // ── 조작 ──
-    btnPlay.addEventListener('click', () => {
-      if (playing) pause();
-      else start(idx < 0 ? 0 : idx);
-    });
-    btnPrev.addEventListener('click', () => {
+    btnPlay.addEventListener('click', function () { playing ? pause() : start(idx < 0 ? 0 : idx); });
+    btnPrev.addEventListener('click', function () {
+      if (!blocks.length) collectBlocks();
       const t = Math.max(0, (idx < 0 ? 0 : idx) - 1);
-      if (playing) { hardStop(); setTimeout(() => speakAt(t), 90); }
+      if (playing) { hardStop(); setTimeout(function () { speakAt(t); }, 90); }
       else { idx = t; mark(t); status((t + 1) + ' / ' + blocks.length); }
     });
-    btnNext.addEventListener('click', () => {
+    btnNext.addEventListener('click', function () {
       if (!blocks.length) collectBlocks();
       const t = Math.min(blocks.length - 1, (idx < 0 ? 0 : idx) + 1);
-      if (playing) { hardStop(); setTimeout(() => speakAt(t), 90); }
+      if (playing) { hardStop(); setTimeout(function () { speakAt(t); }, 90); }
       else { idx = t; mark(t); status((t + 1) + ' / ' + blocks.length); }
     });
-    voiceSel.addEventListener('change', () => {
+    voiceSel.addEventListener('change', function () {
       chosenVoice = voices[parseInt(voiceSel.value)] || null;
-      if (chosenVoice) localStorage.setItem(PREF_VOICE, chosenVoice.name);
-      if (playing) { hardStop(); setTimeout(() => speakAt(idx), 100); }
+      if (chosenVoice) localStorage.setItem(P_VOICE, chosenVoice.name);
+      restart();
     });
-    rateInput.addEventListener('input', () => {
-      rateVal.textContent = parseFloat(rateInput.value).toFixed(2).replace(/0$/, '');
-      localStorage.setItem(PREF_RATE, rateInput.value);
+    function bindRange(el, label, key, fmt) {
+      el.addEventListener('input', function () { label.textContent = fmt(el.value); localStorage.setItem(key, el.value); });
+      el.addEventListener('change', restart);
+      const sv = localStorage.getItem(key); if (sv !== null) el.value = sv;
+      label.textContent = fmt(el.value);
+    }
+    const f2 = function (v) { return parseFloat(v).toFixed(2).replace(/0$/, ''); };
+    bindRange(rateInput, rateVal, P_RATE, f2);
+    bindRange(pitchInput, pitchVal, P_PITCH, f2);
+    bindRange(gapInput, gapVal, P_GAP, function (v) { return (parseInt(v) / 1000).toFixed(1) + '초'; });
+    if (allChk) {
+      allChk.checked = localStorage.getItem(P_ALL) === '1';
+      allChk.addEventListener('change', function () {
+        localStorage.setItem(P_ALL, allChk.checked ? '1' : '0');
+        loadVoices();
+      });
+    }
+    if (btnReset) btnReset.addEventListener('click', function () {
+      rateInput.value = 0.95; pitchInput.value = 0.95; gapInput.value = 400;
+      rateVal.textContent = '0.95'; pitchVal.textContent = '0.95'; gapVal.textContent = '0.4초';
+      localStorage.setItem(P_RATE, 0.95); localStorage.setItem(P_PITCH, 0.95); localStorage.setItem(P_GAP, 400);
+      restart();
     });
-    rateInput.addEventListener('change', () => {
-      if (playing) { hardStop(); setTimeout(() => speakAt(idx), 100); }
-    });
-    const savedRate = localStorage.getItem(PREF_RATE);
-    if (savedRate) { rateInput.value = savedRate; }
-    rateVal.textContent = parseFloat(rateInput.value).toFixed(2).replace(/0$/, '');
 
     // ── 열고 닫기 ──
     function openBar() {
-      collectBlocks();
-      loadVoices();
+      collectBlocks(); loadVoices();
       bar.classList.add('open');
       readerEl.classList.add('tts-open');
       if (scrollTop) scrollTop.classList.add('tts-open');
       if (idx < 0) status('읽을 준비가 되었습니다  ·  ' + blocks.length + '구절');
     }
     function closeBar() {
-      hardStop();
-      playing = false; idx = -1;
-      setPlayIcon(false);
-      clearMark();
+      hardStop(); playing = false; idx = -1; setIcon(false); clearMark();
       bar.classList.remove('open');
       readerEl.classList.remove('tts-open');
       if (scrollTop) scrollTop.classList.remove('tts-open');
     }
-    btnOpen.addEventListener('click', () => {
-      if (bar.classList.contains('open')) closeBar();
-      else openBar();
-    });
+    btnOpen.addEventListener('click', function () { bar.classList.contains('open') ? closeBar() : openBar(); });
     btnClose.addEventListener('click', closeBar);
-
-    // 다른 경전으로 옮기거나 화면을 벗어나면 정지
     const backBtn = document.getElementById('btn-back-to-list');
     if (backBtn) backBtn.addEventListener('click', closeBar);
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden && playing) pause();
-    });
-    window.addEventListener('beforeunload', () => { try { synth.cancel(); } catch (e) {} });
+    document.addEventListener('visibilitychange', function () { if (document.hidden && playing) pause(); });
+    window.addEventListener('beforeunload', function () { try { synth.cancel(); } catch (e) {} });
   })();
 
 
