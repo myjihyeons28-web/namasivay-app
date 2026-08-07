@@ -1262,3 +1262,23 @@ body {
 .tts-reset:active { background: #3a2a18; color: #d4af64; }
 .reader-content.tts-open { padding-bottom: 240px; }
 .btn-scroll-top.tts-open { bottom: 246px; }
+
+/* 조작 바가 열렸을 때 — 구절을 짚어 옮길 수 있음 */
+.reader-content.tts-pickable p,
+.reader-content.tts-pickable h1,
+.reader-content.tts-pickable h2,
+.reader-content.tts-pickable h3,
+.reader-content.tts-pickable h4,
+.reader-content.tts-pickable li,
+.reader-content.tts-pickable blockquote {
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.12s ease;
+}
+.reader-content.tts-pickable p:active,
+.reader-content.tts-pickable h2:active,
+.reader-content.tts-pickable h3:active,
+.reader-content.tts-pickable li:active,
+.reader-content.tts-pickable blockquote:active {
+  background: rgba(212, 175, 100, 0.10);
+}

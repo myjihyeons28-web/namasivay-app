@@ -805,6 +805,7 @@
     const P_VOICE = 'tts-voice-name', P_RATE = 'tts-rate',
           P_PITCH = 'tts-pitch', P_GAP = 'tts-gap', P_ALL = 'tts-allvoices',
           P_CHUNK = 'tts-chunk', P_CGAP = 'tts-cgap';
+    function posKey() { return 'tts_pos_' + (currentSutraId || 'x'); }
 
     // ── 읽을 조각 모으기 (본문 그대로) ──
     function collectBlocks() {
@@ -903,6 +904,7 @@
     function speakAt(i) {
       if (i < 0 || i >= blocks.length) { finish(); return; }
       idx = i; mark(i);
+      try { localStorage.setItem(posKey(), i); } catch (e) {}
       status((i + 1) + ' / ' + blocks.length + '  ·  ' + blocks[i].text.slice(0, 36));
       const parts = splitForBreath(blocks[i].text);
       let pi = 0;
@@ -946,13 +948,13 @@
       if (!blocks.length) collectBlocks();
       const t = Math.max(0, (idx < 0 ? 0 : idx) - 1);
       if (playing) { hardStop(); setTimeout(function () { speakAt(t); }, 90); }
-      else { idx = t; mark(t); status((t + 1) + ' / ' + blocks.length); }
+      else { idx = t; mark(t); try { localStorage.setItem(posKey(), t); } catch (e) {} status((t + 1) + ' / ' + blocks.length); }
     });
     btnNext.addEventListener('click', function () {
       if (!blocks.length) collectBlocks();
       const t = Math.min(blocks.length - 1, (idx < 0 ? 0 : idx) + 1);
       if (playing) { hardStop(); setTimeout(function () { speakAt(t); }, 90); }
-      else { idx = t; mark(t); status((t + 1) + ' / ' + blocks.length); }
+      else { idx = t; mark(t); try { localStorage.setItem(posKey(), t); } catch (e) {} status((t + 1) + ' / ' + blocks.length); }
     });
     voiceSel.addEventListener('change', function () {
       chosenVoice = voices[parseInt(voiceSel.value)] || null;
@@ -997,15 +999,40 @@
       collectBlocks(); loadVoices();
       bar.classList.add('open');
       readerEl.classList.add('tts-open');
+      readerEl.classList.add('tts-pickable');
       if (scrollTop) scrollTop.classList.add('tts-open');
-      if (idx < 0) status('읽을 준비가 되었습니다  ·  ' + blocks.length + '구절');
+      if (idx < 0) {
+        let saved = -1;
+        try { saved = parseInt(localStorage.getItem(posKey())); } catch (e) {}
+        if (!isNaN(saved) && saved > 0 && saved < blocks.length) {
+          idx = saved; mark(saved);
+          status('이어 듣기  ·  ' + (saved + 1) + ' / ' + blocks.length + '  ·  구절을 짚으면 그 자리부터');
+        } else {
+          status('읽을 준비가 되었습니다  ·  ' + blocks.length + '구절  ·  구절을 짚으면 그 자리부터');
+        }
+      }
     }
     function closeBar() {
-      hardStop(); playing = false; idx = -1; setIcon(false); clearMark();
+      hardStop(); playing = false; setIcon(false); clearMark();
       bar.classList.remove('open');
       readerEl.classList.remove('tts-open');
+      readerEl.classList.remove('tts-pickable');
       if (scrollTop) scrollTop.classList.remove('tts-open');
     }
+    // ── 구절을 손으로 짚으면 그 자리부터 읽기 ──
+    readerEl.addEventListener('click', function (ev) {
+      if (!bar.classList.contains('open')) return;
+      if (window.getSelection && String(window.getSelection()).length > 0) return;
+      const el = ev.target.closest && ev.target.closest('p, h1, h2, h3, h4, li, blockquote');
+      if (!el || !readerEl.contains(el)) return;
+      if (!blocks.length) collectBlocks();
+      let t = -1;
+      for (let i = 0; i < blocks.length; i++) { if (blocks[i].el === el) { t = i; break; } }
+      if (t < 0) return;
+      if (playing) { hardStop(); setTimeout(function () { speakAt(t); }, 90); }
+      else { start(t); }
+    });
+
     btnOpen.addEventListener('click', function () { bar.classList.contains('open') ? closeBar() : openBar(); });
     btnClose.addEventListener('click', closeBar);
     const backBtn = document.getElementById('btn-back-to-list');
