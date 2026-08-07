@@ -146,6 +146,22 @@
           <input type="range" id="tts-gap" class="tts-range" min="0" max="2000" step="100" value="400">
         </label>
       </div>
+      <div class="tts-bar-opts">
+        <label class="tts-opt">
+          <span>끊어 읽기</span>
+          <select id="tts-chunk" class="tts-select">
+            <option value="sent">문장마다</option>
+            <option value="w5">다섯 낱말마다</option>
+            <option value="w3">세 낱말마다</option>
+            <option value="w2">두 낱말마다</option>
+            <option value="w1">한 낱말마다</option>
+          </select>
+        </label>
+        <label class="tts-opt tts-opt-rate">
+          <span>끊는 쉼 <b id="tts-cgap-val">0.0초</b></span>
+          <input type="range" id="tts-cgap" class="tts-range" min="0" max="900" step="50" value="0">
+        </label>
+      </div>
       <div class="tts-bar-opts tts-bar-opts-sub">
         <label class="tts-check">
           <input type="checkbox" id="tts-allvoices">
@@ -153,7 +169,6 @@
         </label>
         <button id="tts-reset" class="tts-reset">기본값</button>
       </div>
-      <div class="tts-hint" id="tts-hint"></div>
     </div>
 
     <button id="btn-scroll-top" class="btn-scroll-top" aria-label="맨 위로">

@@ -786,9 +786,11 @@
     const pitchVal   = document.getElementById('tts-pitch-val');
     const gapInput   = document.getElementById('tts-gap');
     const gapVal     = document.getElementById('tts-gap-val');
+    const chunkSel   = document.getElementById('tts-chunk');
+    const cgapInput  = document.getElementById('tts-cgap');
+    const cgapVal    = document.getElementById('tts-cgap-val');
     const allChk     = document.getElementById('tts-allvoices');
     const btnReset   = document.getElementById('tts-reset');
-    const hintEl     = document.getElementById('tts-hint');
     const readerEl   = document.getElementById('reader-content');
     const scrollTop  = document.getElementById('btn-scroll-top');
     if (!bar || !btnOpen || !readerEl) return;
@@ -801,7 +803,8 @@
     let stopping = false;
 
     const P_VOICE = 'tts-voice-name', P_RATE = 'tts-rate',
-          P_PITCH = 'tts-pitch', P_GAP = 'tts-gap', P_ALL = 'tts-allvoices';
+          P_PITCH = 'tts-pitch', P_GAP = 'tts-gap', P_ALL = 'tts-allvoices',
+          P_CHUNK = 'tts-chunk', P_CGAP = 'tts-cgap';
 
     // ── 읽을 조각 모으기 (본문 그대로) ──
     function collectBlocks() {
@@ -817,8 +820,8 @@
       }
     }
 
-    // ── 긴 문단은 문장 자리에서 나누어 숨을 주되, 글자는 그대로 ──
-    function splitForBreath(t) {
+    // ── 끊어 읽을 자리만 정합니다. 글자는 조금도 바꾸지 않습니다 ──
+    function splitBySentence(t) {
       if (t.length <= 110) return [t];
       const out = []; let buf = '';
       for (let i = 0; i < t.length; i++) {
@@ -829,12 +832,26 @@
       }
       const rest = buf.trim(); if (rest) out.push(rest);
       const merged = [];
-      out.forEach(s => {
-        if (merged.length && merged[merged.length - 1].length + s.length < 45)
-          merged[merged.length - 1] += ' ' + s;
-        else merged.push(s);
+      out.forEach(function (x) {
+        if (merged.length && merged[merged.length - 1].length + x.length < 45)
+          merged[merged.length - 1] += ' ' + x;
+        else merged.push(x);
       });
       return merged.length ? merged : [t];
+    }
+    function splitByWords(t, n) {
+      const words = t.split(/\s+/).filter(Boolean);
+      const out = [];
+      for (let i = 0; i < words.length; i += n) out.push(words.slice(i, i + n).join(' '));
+      return out.length ? out : [t];
+    }
+    function splitForBreath(t) {
+      const mode = chunkSel ? chunkSel.value : 'sent';
+      if (mode === 'w1') return splitByWords(t, 1);
+      if (mode === 'w2') return splitByWords(t, 2);
+      if (mode === 'w3') return splitByWords(t, 3);
+      if (mode === 'w5') return splitByWords(t, 5);
+      return splitBySentence(t);
     }
 
     // ── 목소리 ──
@@ -865,14 +882,6 @@
       if (saved) { const f = voices.findIndex(v => v.name === saved); if (f >= 0) pick = f; }
       voiceSel.value = pick;
       chosenVoice = voices[pick] || null;
-      updateHint(all.length, ko.length);
-    }
-    function updateHint(total, koCount) {
-      hintEl.innerHTML = '이 기기가 웹앱에 열어 주는 목소리는 <b>' + koCount + '개</b>입니다 (전체 ' + total + '개). ' +
-        '아이폰은 <b>따로 내려받은 음성(민수 등)을 웹앱에 넘겨주지 않습니다.</b> ' +
-        '그 목소리로 들으시려면 — <b>설정 → 손쉬운 사용 → 콘텐츠 말하기 → 화면 말하기</b>를 켜신 뒤, ' +
-        '이 화면에서 위에서 두 손가락으로 쓸어내리십시오.';
-      hintEl.classList.add('show');
     }
     synth.addEventListener ? synth.addEventListener('voiceschanged', loadVoices) : (synth.onvoiceschanged = loadVoices);
     loadVoices(); setTimeout(loadVoices, 400); setTimeout(loadVoices, 1200);
@@ -912,7 +921,10 @@
         else u.lang = 'ko-KR';
         u.rate  = parseFloat(rateInput.value) || 1;
         u.pitch = parseFloat(pitchInput.value) || 1;
-        u.onend = nextPart;
+        u.onend = function () {
+          const cg = parseInt(cgapInput && cgapInput.value) || 0;
+          if (cg > 0) setTimeout(nextPart, cg); else nextPart();
+        };
         u.onerror = function () { if (!stopping) setTimeout(nextPart, 100); };
         synth.speak(u);
       })();
@@ -957,6 +969,13 @@
     bindRange(rateInput, rateVal, P_RATE, f2);
     bindRange(pitchInput, pitchVal, P_PITCH, f2);
     bindRange(gapInput, gapVal, P_GAP, function (v) { return (parseInt(v) / 1000).toFixed(1) + '초'; });
+    bindRange(cgapInput, cgapVal, P_CGAP, function (v) { return (parseInt(v) / 1000).toFixed(1) + '초'; });
+    if (chunkSel) {
+      const sc = localStorage.getItem(P_CHUNK); if (sc) chunkSel.value = sc;
+      chunkSel.addEventListener('change', function () {
+        localStorage.setItem(P_CHUNK, chunkSel.value); restart();
+      });
+    }
     if (allChk) {
       allChk.checked = localStorage.getItem(P_ALL) === '1';
       allChk.addEventListener('change', function () {
@@ -966,6 +985,8 @@
     }
     if (btnReset) btnReset.addEventListener('click', function () {
       rateInput.value = 0.95; pitchInput.value = 0.95; gapInput.value = 400;
+      if (chunkSel) { chunkSel.value = 'sent'; localStorage.setItem(P_CHUNK, 'sent'); }
+      if (cgapInput) { cgapInput.value = 0; cgapVal.textContent = '0.0초'; localStorage.setItem(P_CGAP, 0); }
       rateVal.textContent = '0.95'; pitchVal.textContent = '0.95'; gapVal.textContent = '0.4초';
       localStorage.setItem(P_RATE, 0.95); localStorage.setItem(P_PITCH, 0.95); localStorage.setItem(P_GAP, 400);
       restart();
