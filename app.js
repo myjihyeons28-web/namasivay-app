@@ -801,11 +801,25 @@
     let voices = [];
     let chosenVoice = null;
     let stopping = false;
+    let boundSutra = null;   // 지금 조작 바가 물려 있는 경전
 
     const P_VOICE = 'tts-voice-name', P_RATE = 'tts-rate',
           P_PITCH = 'tts-pitch', P_GAP = 'tts-gap', P_ALL = 'tts-allvoices',
           P_CHUNK = 'tts-chunk', P_CGAP = 'tts-cgap';
     function posKey() { return 'tts_pos_' + (currentSutraId || 'x'); }
+    // 경전이 바뀌면 읽던 자리를 그 경전 것으로 새로 잡는다
+    function syncSutra() {
+      const cur = currentSutraId || null;
+      if (boundSutra === cur) return false;
+      boundSutra = cur;
+      hardStop();
+      playing = false;
+      setIcon(false);
+      clearMark();
+      blocks = [];
+      idx = -1;
+      return true;
+    }
 
     // ── 읽을 조각 모으기 (본문 그대로) ──
     function collectBlocks() {
@@ -935,6 +949,7 @@
     function finish() { playing = false; stopping = false; setIcon(false); clearMark(); status('다 읽었습니다'); }
     function hardStop() { stopping = true; try { synth.cancel(); } catch (e) {} setTimeout(function () { stopping = false; }, 60); }
     function start(from) {
+      syncSutra();
       collectBlocks();
       if (!blocks.length) { status('읽을 내용이 없습니다'); return; }
       hardStop(); playing = true; setIcon(true);
@@ -997,6 +1012,7 @@
 
     // ── 열고 닫기 ──
     function openBar() {
+      syncSutra();
       collectBlocks(); loadVoices();
       bar.classList.add('open');
       readerEl.classList.add('tts-open');
@@ -1026,6 +1042,7 @@
       if (window.getSelection && String(window.getSelection()).length > 0) return;
       const el = ev.target.closest && ev.target.closest('p, h1, h2, h3, h4, li, blockquote');
       if (!el || !readerEl.contains(el)) return;
+      syncSutra();
       if (!blocks.length) collectBlocks();
       let t = -1;
       for (let i = 0; i < blocks.length; i++) { if (blocks[i].el === el) { t = i; break; } }
