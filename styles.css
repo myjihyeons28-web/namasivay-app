@@ -1258,8 +1258,8 @@ body {
   font-family: inherit; cursor: pointer;
 }
 .tts-reset:active { background: #3a2a18; color: #d4af64; }
-.reader-content.tts-open { padding-bottom: 300px; }
-.btn-scroll-top.tts-open { bottom: 306px; }
+.reader-content.tts-open { padding-bottom: 250px; }
+.btn-scroll-top.tts-open { bottom: 256px; }
 
 /* 조작 바가 열렸을 때 — 구절을 짚어 옮길 수 있음 */
 .reader-content.tts-pickable p,
@@ -1281,5 +1281,3 @@ body {
   background: rgba(212, 175, 100, 0.10);
 }
 
-.tts-tip { font-size: 11.5px; color: #7a6a55; line-height: 1.4; }
-.tts-tip b { color: #b09a78; font-weight: 600; }

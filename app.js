@@ -789,8 +789,6 @@
     const chunkSel   = document.getElementById('tts-chunk');
     const cgapInput  = document.getElementById('tts-cgap');
     const cgapVal    = document.getElementById('tts-cgap-val');
-    const volInput   = document.getElementById('tts-vol');
-    const volVal     = document.getElementById('tts-vol-val');
     const allChk     = document.getElementById('tts-allvoices');
     const btnReset   = document.getElementById('tts-reset');
     const readerEl   = document.getElementById('reader-content');
@@ -806,7 +804,7 @@
 
     const P_VOICE = 'tts-voice-name', P_RATE = 'tts-rate',
           P_PITCH = 'tts-pitch', P_GAP = 'tts-gap', P_ALL = 'tts-allvoices',
-          P_CHUNK = 'tts-chunk', P_CGAP = 'tts-cgap', P_VOL = 'tts-vol';
+          P_CHUNK = 'tts-chunk', P_CGAP = 'tts-cgap';
     function posKey() { return 'tts_pos_' + (currentSutraId || 'x'); }
 
     // ── 읽을 조각 모으기 (본문 그대로) ──
@@ -926,8 +924,6 @@
         u.rate  = parseFloat(rateInput.value) || 1;
         u.pitch = parseFloat(pitchInput.value);
         if (isNaN(u.pitch)) u.pitch = 1;
-        u.volume = parseFloat(volInput && volInput.value);
-        if (isNaN(u.volume)) u.volume = 1;
         u.onend = function () {
           const cg = parseInt(cgapInput && cgapInput.value) || 0;
           if (cg > 0) setTimeout(nextPart, cg); else nextPart();
@@ -976,7 +972,6 @@
     bindRange(rateInput, rateVal, P_RATE, f2);
     bindRange(pitchInput, pitchVal, P_PITCH, f2);
     bindRange(gapInput, gapVal, P_GAP, function (v) { return (parseInt(v) / 1000).toFixed(1) + '초'; });
-    if (volInput) bindRange(volInput, volVal, P_VOL, f2);
     bindRange(cgapInput, cgapVal, P_CGAP, function (v) { return (parseInt(v) / 1000).toFixed(1) + '초'; });
     if (chunkSel) {
       const sc = localStorage.getItem(P_CHUNK); if (sc) chunkSel.value = sc;
@@ -995,7 +990,6 @@
       rateInput.value = 0.95; pitchInput.value = 0.95; gapInput.value = 400;
       if (chunkSel) { chunkSel.value = 'sent'; localStorage.setItem(P_CHUNK, 'sent'); }
       if (cgapInput) { cgapInput.value = 0; cgapVal.textContent = '0.0초'; localStorage.setItem(P_CGAP, 0); }
-      if (volInput) { volInput.value = 1; volVal.textContent = '1'; localStorage.setItem(P_VOL, 1); }
       rateVal.textContent = '0.95'; pitchVal.textContent = '0.95'; gapVal.textContent = '0.4초';
       localStorage.setItem(P_RATE, 0.95); localStorage.setItem(P_PITCH, 0.95); localStorage.setItem(P_GAP, 400);
       restart();
